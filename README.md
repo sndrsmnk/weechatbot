@@ -1,2 +1,3 @@
-# weechatbot
-WeeChat IRC Bot Implementation in Python
+# WeeChatBot
+
+WeeChat IRC Bot implemented in Python
