@@ -161,19 +161,22 @@ class WeeChatBot:
 
             # Found one? Run it.
             if event['trigger']:
-                dlog("Module '%s' handles event by '%s' method: '%s'." % (module, event['trigger'], event['signal']))
                 event['user_info'] = self.db_get_userinfo(event['host'])
                 self.event = event
-
-                # Check permissions
-                if not self.perms(self.modules[module]['permissions']):
-                    dlog("Module permissions mismatched user's permissions. Skip.")
-                    continue
 
                 pp = pprint.PrettyPrinter(indent=4)
                 dlog("Event:\n%s" % pp.pformat(event))
 
-                self.modules[module]['object'].run(self, event)
+                # Check permissions
+                if self.perms(self.modules[module]['permissions']):
+                    dlog("Module '%s' handles event by '%s' method." % (module, event['trigger']))
+#                    try:
+                    self.modules[module]['object'].run(self, event)
+#                    except Exception as err:
+#                    dlog("Module '%s' run() failed: '%s'" % (module, err))
+#                    return self.weechat.WEECHAT_RC_ERROR
+                else:
+                    dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
 
         return self.weechat.WEECHAT_RC_OK
 
@@ -338,24 +341,30 @@ class WeeChatBot:
             sys.modules[module_name] = module_object
             spec.loader.exec_module(module_object)
         except Exception as e:
-            dlog("Loading module '%s' failed: %s" % (module_name, e))
-            return self.weechat.WEECHAT_RC_ERROR
+            rstr = "Loading module '%s' failed: %s" % (module_name, e)
+            dlog(rstr)
+            return rstr
 
         if not hasattr(module_object, 'config'):
-            dlog("Module '%s' loaded, but does not have a config() function. Failed." % (module_name))
-            return self.weechat.WEECHAT_RC_ERROR
+            rstr = "Module '%s' loaded, but does not have a config() function. Failed." % (module_name)
+            dlog(rstr)
+            return rstr
 
         module_config = module_object.config()
         for test_key in ['events', 'commands', 'help']:
             if test_key not in module_config:
-                dlog("Module '%s' config does not provide '%s' key. Failed." % (module_name, test_key))
-                return self.weechat.WEECHAT_RC_ERROR
+                rstr = "Module '%s' config does not provide '%s' key. Failed." % (module_name, test_key)
+                dlog(rstr)
+                return rstr
 
         module_config['object'] = module_object
         self.modules[module_name] = module_config
         if not quiet:
-            dlog("Module '%s' loaded succesfully." % module_name)
-        return self.weechat.WEECHAT_RC_OK
+            rstr = "Module '%s' loaded succesfully." % module_name
+            dlog(rstr)
+            return rstr
+
+        return "OK"
 
 
     def unload_module(self, module_name):
@@ -411,13 +420,13 @@ class WeeChatBot:
         cur.execute(sql, (ret['id'],))
         db_res = cur.fetchall()
         for row in db_res:
-            for k in row.keys():
-                if row['channel'] and row['channel'] != '':
-                    if not ret['permissions'][row['channel']]:
-                        ret['permissions'][row['channel']] = []
-                        ret['permissions'][row['channel']].append(row['permission'])
-                else:
-                    ret['permissions']['global'].append(row['permission'])
+            if row['channel'] and row['channel'] != '':
+                if not ret['permissions'][row['channel']]:
+                    ret['permissions'][row['channel']] = []
+                dlog("rrrr %s: %s" % (k))
+                ret['permissions'][row['channel']].append(row['permission'])
+            else:
+                ret['permissions']['global'].append(row['permission'])
 
         ret['hostmasks'] = []
         sql = "SELECT hostmask FROM wcb_hostmasks WHERE users_id = %s"
@@ -462,14 +471,14 @@ class WeeChatBot:
     def perms(self, want_perms):
         if self.state['bot_ownermask'] == self.event['host']: # owner, always
             return True
-        if not self.event['user_info']: # unrecognized user.
-            return False
         if not want_perms: # module has no perms.
             return True
+        if not self.event['user_info']: # unrecognized user.
+            return False
         channel = self.event['channel']
         for want_perm in want_perms:
             if want_perm in self.event['user_info']['permissions']['global']:
                 return True
-            if self.event['user_info']['permissions'][channel] and want_perm in self.event['user_info']['permissions'][channel]:
+            if channel in self.event['user_info']['permissions'] and want_perm in self.event['user_info']['permissions'][channel]:
                 return True
         return False

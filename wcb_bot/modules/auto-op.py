@@ -15,10 +15,10 @@ def run(wcb, event):
     if not event['user_info']:
         wcb.mlog("User '%s' not recognized." % event['host'])
         return wcb.weechat.WEECHAT_RC_OK
-
     
     if 'auto-op' in event['user_info']['permissions']:
-        
+        wcb.say('XXX auto-op')
+        return wcb.weechat.WEECHAT_RC_OK
 
     wcb.say("Welkom")
     return wcb.weechat.WEECHAT_RC_OK

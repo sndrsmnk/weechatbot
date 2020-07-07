@@ -13,14 +13,16 @@ def run(wcb, event):
         wcb.say("Modules loaded: %s" % mlist)
         return wcb.weechat.WEECHAT_RC_OK
 
+
     # Commands below require param to be set.        
     if event['command_args'] == '':
         wcb.reply("this command requires at least one argument (module name)")
         return wcb.weechat.WEECHAT_RC_OK
 
+
     if event['command'] == 'load' or event['command'] == 'reload':
-        wcb.load_module(event['command_args'])
-        wcb.say("(Re)loaded module '%s'" % event['command_args'])
+        res = wcb.load_module(event['command_args'])
+        wcb.say(res)
         return wcb.weechat.WEECHAT_RC_OK
 
     if event['command'] == 'unload':
