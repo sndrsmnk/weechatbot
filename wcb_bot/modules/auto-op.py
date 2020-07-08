@@ -12,13 +12,17 @@ def run(wcb, event):
         wcb.mlog("Bot is not opped on channel '%s'. Can't auto-op/auto-voice." % event['channel'])
         return wcb.weechat.WEECHAT_RC_OK
 
-    if not event['user_info']:
-        wcb.mlog("User '%s' not recognized." % event['host'])
-        return wcb.weechat.WEECHAT_RC_OK
-    
-    if 'auto-op' in event['user_info']['permissions']:
-        wcb.say('XXX auto-op')
+    tgtNick = event['nick']
+    if event['command_args']:
+        tgtNick = event['command_args'].split(' ')[0]
+
+    if wcb.perms('auto-op'):
+        log = "Gave ops to '%s' on channel '%s'" % (tgtNick, event['channel'])
+        if event['command_args']:
+            log += " on behalf of '%s'" % event['nick']
+        log += "."
+        wcb.mlog(log)
+        wcb.weechat.command(event['weechat_buffer'], '/op ' + tgtNick)
         return wcb.weechat.WEECHAT_RC_OK
 
-    wcb.say("Welkom")
     return wcb.weechat.WEECHAT_RC_OK

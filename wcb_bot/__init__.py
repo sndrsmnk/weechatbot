@@ -23,6 +23,7 @@ def dlog(message):
 class WeeChatBot:
     def __init__(self, weechat):
         self.weechat = weechat
+        self.re = re
 
         bot_output_buffer = self.weechat.buffer_new("WeeChatBot", "shim_wcb_handle_buffer_input", "", "", "")
         self.buffer = bot_output_buffer
@@ -91,10 +92,11 @@ class WeeChatBot:
 
         self.save_bot_configuration()
 
-        weechat.hook_signal("*,irc_in2_privmsg", "shim_wcb_handle_event", "")
-        weechat.hook_signal("*,irc_in2_join",    "shim_wcb_handle_event", "")
-        weechat.hook_signal("*,irc_in2_part",    "shim_wcb_handle_event", "")
-        weechat.hook_signal("*,irc_in2_quit",    "shim_wcb_handle_event", "")
+        weechat.hook_signal("*,irc_in2_privmsg", "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_join",    "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_part",    "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_quit",    "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_topic",   "shim_wcb_handle_event",     "")
 
         dlog("\nWeeChatBot initialization complete!")
 
@@ -133,6 +135,10 @@ class WeeChatBot:
         if not reply_buffer:
             dlog("Could not find reply_buffer for event: '%s'" % event)
         event['weechat_buffer'] = reply_buffer
+
+        # If this is a JOIN event, update WeeChat internal state with gratouitous '/WHO' on channel
+        if event['signal'] == 'irc_in2_JOIN':
+            self.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
 
         # Find our name on event's channel
         bot_nick = self.weechat.buffer_get_string(event['weechat_buffer'], 'localvar_nick')
@@ -182,7 +188,7 @@ class WeeChatBot:
                             exc_traceback = exc_traceback.tb_next
                         frame = exc_traceback.tb_frame
                         mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
-                        rtxt = "Module '%s' run() error: '%s' at line %s" % (mod_name, err, frame.f_lineno)
+                        rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
                         if event['weechat_buffer']:
                             self.say(rtxt)
                         dlog(rtxt)
@@ -404,6 +410,23 @@ class WeeChatBot:
             dlog("Error while connecting to PostgreSQL: %s" % err)
             return
         return pg_conn
+
+
+    def db_get_userinfo_nick(self, tnick):
+        # Find referenced nick name in the originating event channel
+        infolist = self.weechat.infolist_get('irc_nick', '', '%s,%s' % (self.event['server'], self.event['channel']))
+        tuserhost = ''
+        while self.weechat.infolist_next(infolist):
+            nick = self.weechat.infolist_string(infolist, 'name')
+            if nick != tnick:
+                continue
+            host = self.weechat.infolist_string(infolist, 'host')
+            if host == '':
+                self.say("Sorry, try that again?")
+                return self.weechat.WEECHAT_RC_OK
+            tuserhost = '%s!%s' % (nick, host)
+        self.weechat.infolist_free(infolist)
+        return self.db_get_userinfo(tuserhost)
 
 
     def db_get_userinfo(self, host):

@@ -25,21 +25,7 @@ def run(wcb, event):
         wcb.reply("i know who i am.")
         return wcb.weechat.WEECHAT_RC_OK
 
-    # Find referenced nick name in the originating event channel
-    infolist = wcb.weechat.infolist_get('irc_nick', '', '%s,%s' % (event['server'], event['channel']))
-    tuserhost = ''
-    while wcb.weechat.infolist_next(infolist):
-        nick = wcb.weechat.infolist_string(infolist, 'name')
-        if nick != tnick:
-            continue
-        host = wcb.weechat.infolist_string(infolist, 'host')
-        if host == '':
-            wcb.say("Sorry, try that again?")
-            return wcb.weechat.WEECHAT_RC_OK
-        tuserhost = '%s!%s' %(nick, host)                
-    wcb.weechat.infolist_free(infolist)
-
-    db_user_info = wcb.db_get_userinfo(tuserhost)
+    db_user_info = wcb.db_get_userinfo_nick(tnick)
     if db_user_info != None:
         wcb.reply("an existing user named '%s' was found matching the host mask '%s'." % (db_user_info['username'], tuserhost))
         return wcb.weechat.WEECHAT_RC_OK
