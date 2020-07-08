@@ -19,7 +19,6 @@ def run(wcb, event):
         wcb.reply("this command requires at least one argument (module name)")
         return wcb.weechat.WEECHAT_RC_OK
 
-
     if event['command'] == 'load' or event['command'] == 'reload':
         res = wcb.load_module(event['command_args'])
         wcb.say(res)
@@ -29,3 +28,10 @@ def run(wcb, event):
         wcb.unload_module(event['command_args'])
         wcb.say("Unloaded module '%s'" % event['command_args'])
         return wcb.weechat.WEECHAT_RC_OK
+
+    if event['command'] == 'avail':
+        rtxt = 'Modules loaded: %s' % (', '.join(sorted(self.modules)))
+        wcb.say(rtxt)
+        return wcb.weechat.WEECHAT_RC_OK
+
+    return wcb.weechat.WEECHAT_RC_ERROR
