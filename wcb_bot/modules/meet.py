@@ -1,7 +1,3 @@
-import time
-usleep = lambda x: time.sleep(x/1000.0)
-
-
 def config():
     return {
         'events': [],
