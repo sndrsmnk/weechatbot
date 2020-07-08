@@ -131,7 +131,6 @@ class WeeChatBot:
         reply_buffer = self.weechat.buffer_search("irc", '(?i)' + reply_buffer_name) # (?i) case insensitive
         if not reply_buffer:
             dlog("Could not find reply_buffer for event: '%s'" % event)
-            return self.weechat.WEECHAT_RC_ERROR
         event['weechat_buffer'] = reply_buffer
 
         # Find our name on event's channel
@@ -150,6 +149,9 @@ class WeeChatBot:
                 event['bot_is_op'] = True
                 break
 
+        pp = pprint.PrettyPrinter(indent=4)
+        dlog("Event:\n%s" % pp.pformat(event))
+
         # Look for modules to handle this event.
         for module in list(self.modules):
             event['trigger'] = ''
@@ -163,9 +165,6 @@ class WeeChatBot:
             if event['trigger']:
                 event['user_info'] = self.db_get_userinfo(event['host'])
                 self.event = event
-
-                pp = pprint.PrettyPrinter(indent=4)
-                dlog("Event:\n%s" % pp.pformat(event))
 
                 # Check permissions
                 if self.perms(self.modules[module]['permissions']):

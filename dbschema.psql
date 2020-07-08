@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS wcb_users;
 
 CREATE TABLE wcb_users (
     id SERIAL PRIMARY KEY,
-    ircnick VARCHAR(64) UNIQUE NOT NULL
+    username VARCHAR(64) UNIQUE NOT NULL
 -- add more info?
 );
 
@@ -120,5 +120,5 @@ CREATE TABLE wcb_quotes (
       ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
-INSERT INTO wcb_users (ircnick, insert_time) VALUES ('gozerbot_import_user', NOW());
+INSERT INTO wcb_users (username, insert_time) VALUES ('gozerbot_import_user', NOW());
 INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (1, 'non existent user');

@@ -19,12 +19,12 @@ def run(wcb, event):
     try:
         merge_irc_nick, merge_db_user = event['command_args'].split(' ')
     except ValueError as err:
-        wcb.say("Usage: merge ircnick dbusername")
+        wcb.say("Usage: merge irc_nick dbusername")
         return wcb.weechat.WEECHAT_RC_OK
     
     db = wcb.db_connect()
     cur = db.cursor()
-    sql = "SELECT id, ircnick FROM wcb_users WHERE ircnick = %s"
+    sql = "SELECT id, username FROM wcb_users WHERE username = %s"
     cur.execute(sql, (merge_db_user,))
     db_userinfo = cur.fetchone()
     if not db_userinfo:
@@ -51,7 +51,7 @@ def run(wcb, event):
     # Don't merge users that are already identified.
     tmp = wcb.db_get_userinfo(merge_userhost)
     if tmp:
-        wcb.say("Hostmask '%s' for nick '%s' matches registered user '%s'." % (merge_userhost, merge_irc_nick, tmp['ircnick']))
+        wcb.say("Hostmask '%s' for nick '%s' matches registered user '%s'." % (merge_userhost, merge_irc_nick, tmp['username']))
         return wcb.weechat.WEECHAT_RC_OK
 
     sql = "INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (%s, %s)"

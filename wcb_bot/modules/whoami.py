@@ -13,8 +13,8 @@ def run(wcb, event):
     if event['host'] == wcb.state['bot_ownermask']:
         rtxt += ", and YOU are my owner!"
     else:
-        if event['user_info'] and event['user_info']['ircnick']:
-            rtxt += ", registered user " + event['user_info']['ircnick']
+        if event['user_info'] and event['user_info']['username']:
+            rtxt += ", registered user " + event['user_info']['username']
 
             if event['user_info']['permissions']['global']:
                 rtxt += ", with global perms (%s)" % ", ".join(event['user_info']['permissions']['global'])
@@ -28,7 +28,7 @@ def run(wcb, event):
 
             db = wcb.db_connect()
             cur = db.cursor()
-            sql = "SELECT * FROM wcb_users WHERE ircnick ILIKE %s"
+            sql = "SELECT * FROM wcb_users WHERE username ILIKE %s"
             cur.execute(sql, (event['nick'],))
             res = cur.fetchone()
             if res:

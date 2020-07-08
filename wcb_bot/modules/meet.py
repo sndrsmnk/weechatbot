@@ -41,16 +41,16 @@ def run(wcb, event):
 
     db_user_info = wcb.db_get_userinfo(tuserhost)
     if db_user_info != None:
-        wcb.reply("an existing user named '%s' was found matching the host mask '%s'." % (db_user_info['ircnick'], tuserhost))
+        wcb.reply("an existing user named '%s' was found matching the host mask '%s'." % (db_user_info['username'], tuserhost))
         return wcb.weechat.WEECHAT_RC_OK
 
     db = wcb.db_connect()
     cur = db.cursor()
 
-    sql = "INSERT INTO wcb_users (ircnick) VALUES (%s)"
+    sql = "INSERT INTO wcb_users (username) VALUES (%s)"
     cur.execute(sql, (tnick,))
 
-    sql = "SELECT id FROM wcb_users WHERE ircnick = %s"
+    sql = "SELECT id FROM wcb_users WHERE username = %s"
     cur.execute(sql, (tnick,))
     res = cur.fetchone()
     if res == None:
