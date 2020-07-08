@@ -12,10 +12,6 @@ def config():
 
 
 def run(wcb, event):
-    # Refresh WeeChat internal information about channel participants
-    wcb.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
-    usleep(500)
-
     try:
         merge_irc_nick, merge_db_user = event['command_args'].split(' ')
     except ValueError as err:
@@ -40,7 +36,8 @@ def run(wcb, event):
             continue
         host = wcb.weechat.infolist_string(infolist, 'host')
         if host == '':
-            wcb.say("Sorry, try that again?")
+            wcb.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
+            wcb.say('OOPS: WeeChat stale data. Try again!')
             return wcb.weechat.WEECHAT_RC_OK
         merge_userhost = '%s!%s' %(nick, host)                
     wcb.weechat.infolist_free(infolist)

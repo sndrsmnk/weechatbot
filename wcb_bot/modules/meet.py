@@ -12,10 +12,6 @@ def config():
 
 
 def run(wcb, event):
-    # Refresh WeeChat internal information about channel participants
-    wcb.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
-    usleep(500)
-
     tnick = event['command_args']
     if tnick == '':
         wcb.reply("please state who you want me to meet.")
