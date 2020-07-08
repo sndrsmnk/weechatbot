@@ -9,6 +9,7 @@ import socket
 import weechat
 import inspect
 import psycopg2
+import traceback
 import importlib.util
 import psycopg2.extras
 
@@ -161,22 +162,31 @@ class WeeChatBot:
             elif event['signal'] in self.modules[module]['events']:
                 event['trigger'] = 'event'
 
-            # Found one? Run it.
+            # Found one?
             if event['trigger']:
                 event['user_info'] = self.db_get_userinfo(event['host'])
                 self.event = event
 
-                # Check permissions
-                if self.perms(self.modules[module]['permissions']):
-                    dlog("Module '%s' handles event by '%s' method." % (module, event['trigger']))
-#                    try:
-                    self.modules[module]['object'].run(self, event)
-#                    except Exception as err:
-#                    dlog("Module '%s' run() failed: '%s'" % (module, err))
-#                    return self.weechat.WEECHAT_RC_ERROR
-                else:
+                # Check permissions and run if allowed.
+                if not self.perms(self.modules[module]['permissions']):
                     dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
-
+                else:
+                    dlog("Module '%s' handles event by '%s' method." % (module, event['trigger']))
+                    try:
+                        self.modules[module]['object'].run(self, event)
+                    except Exception as err:
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        while 1:
+                            if not exc_traceback.tb_next:
+                                break
+                            exc_traceback = exc_traceback.tb_next
+                        frame = exc_traceback.tb_frame
+                        mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
+                        rtxt = "Module '%s' run() error: '%s' at line %s" % (mod_name, err, frame.f_lineno)
+                        if event['weechat_buffer']:
+                            self.say(rtxt)
+                        dlog(rtxt)
+                        return self.weechat.WEECHAT_RC_ERROR
         return self.weechat.WEECHAT_RC_OK
 
 

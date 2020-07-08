@@ -8,5 +8,5 @@ def config():
 
 
 def run(wcb, event):
-    wcb.say("You must be a registered user!")
+    a = 100 / 0
     return wcb.weechat.WEECHAT_RC_OK
