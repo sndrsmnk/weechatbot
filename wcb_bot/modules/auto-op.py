@@ -16,13 +16,10 @@ def run(wcb, event):
     if event['command_args']:
         tgtNick = event['command_args'].split(' ')[0]
 
-    if wcb.perms('auto-op'):
-        log = "Gave ops to '%s' on channel '%s'" % (tgtNick, event['channel'])
-        if event['command_args']:
-            log += " on behalf of '%s'" % event['nick']
-        log += "."
-        wcb.mlog(log)
-        wcb.weechat.command(event['weechat_buffer'], '/op ' + tgtNick)
-        return wcb.weechat.WEECHAT_RC_OK
-
+    log = "Gave ops to '%s' on channel '%s'" % (tgtNick, event['channel'])
+    if event['command_args']:
+        log += " on behalf of '%s'" % event['nick']
+    log += "."
+    wcb.mlog(log)
+    wcb.weechat.command(event['weechat_buffer'], '/op ' + tgtNick)
     return wcb.weechat.WEECHAT_RC_OK

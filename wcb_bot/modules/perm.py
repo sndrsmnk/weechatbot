@@ -37,24 +37,16 @@ def run(wcb, event):
         for permission in args_arr:
             cur.execute(sql, (nick_userinfo['id'], permission, channel))
             counter += 1
+        db.commit(); cur.close(); db.close()
         wcb.say("Added %d permissions to '%s'" % (counter, nick))
 
     elif wcb.re.match('(?:rem(?:ove)?|del(?:ete)?)', mode):
-        pass
+        counter = 0
+        sql = "DELETE FROM wcb_perms WHERE users_id = %s AND permission = %s AND channel = %s"
+        for permission in args_arr:
+            cur.execute(sql, (nick_userinfo['id'], permission, channel))
+            counter += 1
+        db.commit(); cur.close(); db.close()
+        wcb.say("Removed %d permissions from '%s'" % (counter, nick))
 
-    return
-
-#if ($mode =~ m#(?:rem(?:ove)?|del(?:ete)?)#) {
-#    my $count = 0;
-#    foreach my $permission (@perms) {
-#        $$state{dbh}->do("DELETE FROM ib_perms WHERE users_id = ? AND permission = ? AND channel = ?", undef, $$user_info{id}, $permission, $channel);
-#        $count++;
-#        if ($DBI::errstr ne "") {
-#            public("Database failure while removing permission '$permission'");
-#            $count--;
-#        }
-#    }
-#    public("Removed $count permission(s) from $nick");
-#}
-#
-#return;
+    return wcb.weechat.WEECHAT_RC_OK

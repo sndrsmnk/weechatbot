@@ -453,9 +453,8 @@ class WeeChatBot:
         db_res = cur.fetchall()
         for row in db_res:
             if row['channel'] and row['channel'] != '':
-                if not ret['permissions'][row['channel']]:
+                if row['channel'] not in ret['permissions']:
                     ret['permissions'][row['channel']] = []
-                dlog("rrrr %s: %s" % (k))
                 ret['permissions'][row['channel']].append(row['permission'])
             else:
                 ret['permissions']['global'].append(row['permission'])
