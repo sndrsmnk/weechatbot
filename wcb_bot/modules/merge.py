@@ -42,7 +42,7 @@ def run(wcb, event):
         wcb.say("Nick '%s' was not found in channel '%s.'" % (merge_irc_nick, event['channel']))
 
     # Don't merge users that are already identified.
-    tmp = wcb.db_get_userinfo(merge_userhost)
+    tmp = wcb.db_get_userinfo_by_userhost(merge_userhost)
     if tmp:
         wcb.say("Hostmask '%s' for nick '%s' matches registered user '%s'." % (merge_userhost, merge_irc_nick, tmp['username']))
         return wcb.weechat.WEECHAT_RC_OK

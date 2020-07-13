@@ -170,7 +170,7 @@ class WeeChatBot:
 
             # Found one?
             if event['trigger']:
-                event['user_info'] = self.db_get_userinfo(event['host'])
+                event['user_info'] = self.db_get_userinfo_by_userhost(event['host'])
                 self.event = event
 
                 # Check permissions and run if allowed.
@@ -412,7 +412,7 @@ class WeeChatBot:
         return pg_conn
 
 
-    def db_get_userinfo_nick(self, tnick):
+    def db_get_userinfo_by_ircnick(self, tnick):
         # Find referenced nick name in the originating event channel
         infolist = self.weechat.infolist_get('irc_nick', '', '%s,%s' % (self.event['server'], self.event['channel']))
         tuserhost = ''
@@ -426,10 +426,10 @@ class WeeChatBot:
                 return self.weechat.WEECHAT_RC_OK
             tuserhost = '%s!%s' % (nick, host)
         self.weechat.infolist_free(infolist)
-        return self.db_get_userinfo(tuserhost)
+        return self.db_get_userinfo_by_userhost(tuserhost)
 
 
-    def db_get_userinfo(self, host):
+    def db_get_userinfo_by_userhost(self, host):
         ret = {}
 
         db = self.db_connect()

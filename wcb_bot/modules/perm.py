@@ -23,7 +23,7 @@ def run(wcb, event):
         channel = args_arr.pop(-1)
     # args_arr should now only hold permissions to set
 
-    nick_userinfo = wcb.db_get_userinfo_nick(nick)
+    nick_userinfo = wcb.db_get_userinfo_by_ircnick(nick)
     if not nick_userinfo:
         wcb.say("Could not match nick '%s' to a known user. Try merging first?" % nick)
         return wcb.weechat.WEECHAT_RC_OK
