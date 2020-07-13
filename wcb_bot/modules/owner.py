@@ -29,10 +29,10 @@ def run(wcb, event):
     cur = db.cursor()
 
     sql = "INSERT INTO wcb_users (username) VALUES (%s)"
-    cur.execute(sql, (tnick,))
+    cur.execute(sql, (event['nick'],))
 
     sql = "SELECT id FROM wcb_users WHERE username = %s"
-    cur.execute(sql, (tnick,))
+    cur.execute(sql, (event['nick'],))
     res = cur.fetchone()
     if res == None:
         wcb.mlog("Error looking up users_id!")

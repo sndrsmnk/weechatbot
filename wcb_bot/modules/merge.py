@@ -23,7 +23,7 @@ def run(wcb, event):
         wcb.say("User '%s' was not found in the database." % merge_db_user)
         return wcb.weechat.WEECHAT_RC_OK
 
-    merge_userhost = wcb.get_userhost_by_ircnick(merge_ircnick)
+    merge_userhost = wcb.get_userhost_by_ircnick(merge_irc_nick)
 
     if not merge_userhost:
         wcb.say("Nick '%s' was not found in channel '%s.'" % (merge_irc_nick, event['channel']))

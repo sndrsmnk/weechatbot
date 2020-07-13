@@ -19,7 +19,7 @@ def run(wcb, event):
 
     db_user_info = wcb.db_get_userinfo_by_ircnick(tnick)
     if db_user_info == None:
-        wcb.reply("no user named '%s' was found." % (db_user_info['username'], tuserhost))
+        wcb.reply("no user named '%s' was found." % (tnick))
         return wcb.weechat.WEECHAT_RC_OK
 
     db = wcb.db_connect()

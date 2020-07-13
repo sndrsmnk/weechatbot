@@ -502,10 +502,12 @@ class WeeChatBot:
     def perms(self, want_perms):
         if self.state['bot_ownermask'] == self.event['host']: # owner, always
             return True
-        if not want_perms: # module has no perms.
-            return True
         if not self.event['user_info']: # unrecognized user.
             return False
+        if 'owner' in self.event['user_info']['permissions']['global']: # owner, by permission
+            return True
+        if not want_perms: # module has no perms.
+            return True
         channel = self.event['channel']
         for want_perm in want_perms:
             if want_perm in self.event['user_info']['permissions']['global']:
