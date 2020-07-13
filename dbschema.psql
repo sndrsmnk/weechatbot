@@ -50,7 +50,8 @@ CREATE TABLE wcb_infoitems (
     channel VARCHAR(150) NOT NULL,
     insert_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    PRIMARY KEY (id, item, value, channel),
+    PRIMARY KEY (id),
+    UNIQUE (item, value, channel),
     CONSTRAINT wcb_users_id_fkey FOREIGN KEY (users_id)
       REFERENCES wcb_users (id) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION

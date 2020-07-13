@@ -13,8 +13,7 @@ def run(wcb, event):
     args_arr = args_txt.split(' ')
 
     if len(args_arr) < 3:
-        wcb.reply("usage is perm <add|remove> <nick> <permission1> [..<permissionN>] [<channel>]")
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.reply("usage is perm <add|remove> <nick> <permission1> [..<permissionN>] [<channel>]")
 
     mode = args_arr.pop(0)
     nick = args_arr.pop(0)
@@ -25,8 +24,7 @@ def run(wcb, event):
 
     nick_userinfo = wcb.db_get_userinfo_by_ircnick(nick)
     if not nick_userinfo:
-        wcb.say("Could not match nick '%s' to a known user. Try merging first?" % nick)
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.say("Could not match nick '%s' to a known user. Try merging first?" % nick)
 
     db = wcb.db_connect()
     cur = db.cursor()
@@ -38,7 +36,7 @@ def run(wcb, event):
             cur.execute(sql, (nick_userinfo['id'], permission, channel))
             counter += 1
         db.commit(); cur.close(); db.close()
-        wcb.say("Added %d permissions to '%s'" % (counter, nick))
+        return wcb.say("Added %d permissions to '%s'" % (counter, nick))
 
     elif wcb.re.match('(?:rem(?:ove)?|del(?:ete)?)', mode):
         counter = 0
@@ -47,6 +45,4 @@ def run(wcb, event):
             cur.execute(sql, (nick_userinfo['id'], permission, channel))
             counter += 1
         db.commit(); cur.close(); db.close()
-        wcb.say("Removed %d permissions from '%s'" % (counter, nick))
-
-    return wcb.weechat.WEECHAT_RC_OK
+        return wcb.say("Removed %d permissions from '%s'" % (counter, nick))

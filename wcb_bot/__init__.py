@@ -18,6 +18,7 @@ def dlog(message):
     dlog_buffer = weechat.buffer_search('python', 'WeeChatBot')
     for ln in message.split("\n"):
         weechat.prnt(dlog_buffer, 'bot | ' + ln)
+    return weechat.WEECHAT_RC_OK
 
 
 class WeeChatBot:
@@ -191,8 +192,7 @@ class WeeChatBot:
                         rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
                         if event['weechat_buffer']:
                             self.say(rtxt)
-                        dlog(rtxt)
-                        return self.weechat.WEECHAT_RC_ERROR
+                        return dlog(rtxt)
         return self.weechat.WEECHAT_RC_OK
 
 
@@ -220,8 +220,7 @@ class WeeChatBot:
     def setup_udp_listener(self):
         for key in ['udp_listen_ip', 'udp_listen_port', 'udp_listen_pass']:
             if self.state[key] and self.state[key] == '':
-                dlog("UDP listener disabled: missing '%s' setting" % key)
-                return weechat.WEECHAT_RC_ERROR
+                return dlog("UDP listener disabled: missing '%s' setting" % key)
         if self.udp_socket_open == True:
             self.udp_socket.close()
             self.udp_socket_open = False
@@ -239,23 +238,20 @@ class WeeChatBot:
         try:
             str_data = data.decode('utf-8')
         except Exception as err:
-            dlog("UDP message from [%s]:%s did not decode as valid UTF-8: '%s'" % (host, port, data))
-            return self.weechat.WEECHAT_RC_ERROR
+            return dlog("UDP message from [%s]:%s did not decode as valid UTF-8: '%s'" % (host, port, data))
 
         # Expect -at least- three words input
         # Password TargetChannel Message[..]
         re_sult = re.match('^(\S+)\s+(\S+)\s+(.*)', str_data)
         if not re_sult:
-            dlog("UDP message from [%s]:%s not properly formed: '%s'" % (host, port, data))
-            return self.weechat.WEECHAT_RC_ERROR
+            return dlog("UDP message from [%s]:%s not properly formed: '%s'" % (host, port, data))
 
         password = re_sult.group(1)
         channel  = re_sult.group(2)
         message  = re_sult.group(3)
 
         if password != self.state['udp_listen_pass']:
-            dlog("UDP message from [%s]:%s had bad password: '%s'" % (host, port, data))
-            return self.weechat.WEECHAT_RC_ERROR
+            return dlog("UDP message from [%s]:%s had bad password: '%s'" % (host, port, data))
 
         # Check if channel is indeed the channel, or the server name.
         # If it smells like a server name, strip of the next word from
@@ -309,26 +305,22 @@ class WeeChatBot:
         try:
             output = open(self.state['bot_config'], 'w')
         except Exception as e:
-            dlog("Can't write configuration file '%s': %s" % (self.state['bot_config'], e))
-            return self.weechat.WEECHAT_RC_ERROR
+            return dlog("Can't write configuration file '%s': %s" % (self.state['bot_config'], e))
         output.write(json.dumps(self.state, sort_keys=True, indent=4))
         output.close()
 
-        dlog("Configuration file was saved.")
-        return self.weechat.WEECHAT_RC_OK
+        return dlog("Configuration file was saved.")
 
 
     def load_bot_configuration(self):
         try:
             input = open(self.state['bot_config'], 'r')
         except Exception as e:
-            dlog("Can't read configuration file '%s': %s" % (self.state['bot_config'], e))
-            return self.weechat.WEECHAT_RC_ERROR
+            return dlog("Can't read configuration file '%s': %s" % (self.state['bot_config'], e))
 
         self.state = json.load(input)
         input.close()
-        dlog("Configuration file was loaded.")
-        return self.weechat.WEECHAT_RC_OK
+        return dlog("Configuration file was loaded.")
 
 
 
@@ -339,8 +331,7 @@ class WeeChatBot:
                 continue
             self.load_module(ent, quiet=True)
         mlist = ", ".join(self.modules.keys())
-        dlog("Loaded modules: [%s]" % mlist)
-        return self.weechat.WEECHAT_RC_OK
+        return dlog("Loaded modules: [%s]" % mlist)
 
 
     def load_module(self, module_name, quiet=False):
@@ -387,14 +378,12 @@ class WeeChatBot:
             module_name = module_name[:-3]
 
         if module_name not in self.modules:
-            dlog("A module named '%s' was not found loaded." % module_name)
-            return self.weechat.WEECHAT_RC_OK
+            return dlog("A module named '%s' was not found loaded." % module_name)
 
         # Python cant "unload" modules, so this just
         # removes the internal reference to the module
         del self.modules[module_name]
-        dlog("Module '%s' unloaded succesfully." % module_name)
-        return self.weechat.WEECHAT_RC_OK
+        return dlog("Module '%s' unloaded succesfully." % module_name)
 
 
 
@@ -407,8 +396,7 @@ class WeeChatBot:
                         port = self.state['db_port'],
                         dbname = self.state['db_name'])
         except (Exception, psycopg2.Error) as err:
-            dlog("Error while connecting to PostgreSQL: %s" % err)
-            return
+            return dlog("Error while connecting to PostgreSQL: %s" % err)
         return pg_conn
 
 
@@ -483,19 +471,23 @@ class WeeChatBot:
         mlog_buffer = self.weechat.buffer_search('python', 'WeeChatBot')
         for ln in message.split("\n"):
             weechat.prnt(mlog_buffer, "%s | %s" % (caller, ln))
+        return self.weechat.WEECHAT_RC_OK
 
 
     def reply(self, message):
         reply = "%s, %s" % (self.event['nick'], message)
         self.weechat.command(self.event['weechat_buffer'], reply)
+        return self.weechat.WEECHAT_RC_OK
 
 
     def say(self, message):
         self.weechat.command(self.event['weechat_buffer'], message)
+        return self.weechat.WEECHAT_RC_OK
 
 
     def private(self, message):
         self.weechat.command(self.event['weechat_buffer'], '/msg %s %s' % (self.event['nick'], message))
+        return self.weechat.WEECHAT_RC_OK
 
 
     def perm(self, want_perms): return self.perms(want_perms)

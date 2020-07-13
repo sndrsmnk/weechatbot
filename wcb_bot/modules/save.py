@@ -10,8 +10,7 @@ def config():
 def run(wcb, event):
     if event['command'] == 'save':
         wcb.save_bot_configuration()
-        wcb.say("Bot configuration saved!")
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.say("Bot configuration saved!")
 
     if event['command'] == 'set':
         res = wcb.re.match("^([^\s]+)[\s=]+(.*)", event['command_args'])
@@ -26,31 +25,26 @@ def run(wcb, event):
             if ov:
                 ret += " (old value: '%s')" % ov
             wcb.say("%s" % ret)
-            wcb.save_bot_configuration()
-            return wcb.weechat.WEECHAT_RC_OK
-        wcb.say("Could not discern key, value from arguments: '%s'" % event['command_args'])
-        return wcb.weechat.WEECHAT_RC_OK
+            return wcb.save_bot_configuration()
+        return wcb.say("Could not discern key, value from arguments: '%s'" % event['command_args'])
             
     if event['command'] == 'get':
         k = event['command_args']
         if k in wcb.state:
-            wcb.say("Set value of '%s' is '%s'." % (k, wcb.state[k]))
+            return wcb.say("Set value of '%s' is '%s'." % (k, wcb.state[k]))
         else:
-            wcb.say("Key '%s' does not exist." % k)
-        return wcb.weechat.WEECHAT_RC_OK
+            return wcb.say("Key '%s' does not exist." % k)
     
     if event['command'] == 'del':
         k = event['command_args']
         if k in wcb.state:
             ov = wcb.state[k]
             del wcb.state[k]
-            wcb.say("Key '%s' was removed! Value was: '%s'" % (k, ov))
             wcb.save_bot_configuration()
+            return wcb.say("Key '%s' was removed! Value was: '%s'" % (k, ov))
         else:
-            wcb.say("Key '%s' does not exist." % k)
-        return wcb.weechat.WEECHAT_RC_OK
+            return wcb.say("Key '%s' does not exist." % k)
     
     if event['command'] == 'list':
         keys = ", ".join(wcb.state.keys())
-        wcb.say("The following keys are in state: %s" % keys)
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.say("The following keys are in state: %s" % keys)

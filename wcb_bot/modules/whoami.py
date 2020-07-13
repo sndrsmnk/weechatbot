@@ -34,5 +34,4 @@ def run(wcb, event):
             if res:
                 rtxt += ", but a user was found in the DB, perhaps you need a merge?"
 
-    wcb.reply(rtxt)
-    return wcb.weechat.WEECHAT_RC_OK
+    return wcb.reply(rtxt)

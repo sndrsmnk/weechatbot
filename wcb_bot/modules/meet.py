@@ -10,19 +10,16 @@ def config():
 def run(wcb, event):
     tnick = event['command_args']
     if tnick == '':
-        wcb.reply("please state who you want me to meet.")
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.reply("please state who you want me to meet.")
 
     if tnick == event['bot_nick']:
-        wcb.reply("i know who i am.")
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.reply("i know who i am.")
 
     tuserhost = wcb.get_userhost_by_ircnick(tnick)
 
     db_user_info = wcb.db_get_userinfo_by_userhost(tuserhost)
     if db_user_info != None:
-        wcb.reply("an existing user named '%s' was found matching the host mask '%s'." % (db_user_info['username'], tuserhost))
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.reply("an existing user named '%s' was found matching the host mask '%s'." % (db_user_info['username'], tuserhost))
 
     db = wcb.db_connect()
     cur = db.cursor()
@@ -34,8 +31,8 @@ def run(wcb, event):
     cur.execute(sql, (tnick,))
     res = cur.fetchone()
     if res == None:
-        wcb.mlog("Error looking up users_id!")
-        return wcb.weechat.WEECHAT_RC_ERROR
+        return wcb.mlog("Error looking up users_id!")
+
     tuserid = res[0]
 
     sql = "INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (%s, %s)"
@@ -49,5 +46,4 @@ def run(wcb, event):
     cur.close()
     db.close()
 
-    wcb.say("Added user '%s' to the database with host mask '%s'." % (tnick, tuserhost));
-    return wcb.weechat.WEECHAT_RC_OK
+    return wcb.say("Added user '%s' to the database with host mask '%s'." % (tnick, tuserhost));

@@ -9,8 +9,7 @@ def config():
 
 def run(wcb, event):
     if not event['bot_is_op']:
-        wcb.mlog("Bot is not opped on channel '%s'. Can't auto-op/auto-voice." % event['channel'])
-        return wcb.weechat.WEECHAT_RC_OK
+        return wcb.mlog("Bot is not opped on channel '%s'. Can't auto-op/auto-voice." % event['channel'])
 
     tgtNick = event['nick']
     if event['command_args']:
