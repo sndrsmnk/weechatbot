@@ -462,6 +462,51 @@ class WeeChatBot:
         return ret
 
 
+    def db_get_userinfo_by_username(self, username):
+        ret = {}
+
+        db = self.db_connect()
+        cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+
+        sql = "SELECT h.hostmask AS current_hostmask, u.* FROM wcb_hostmasks h, wcb_users u WHERE h.users_id = u.id AND u.username = %s"
+        cur.execute(sql, (username,))
+        db_res = cur.fetchall()
+        if not db_res:
+            return None
+        db_res = db_res[0]
+        for key in db_res.keys():
+            ret[key] = db_res[key]
+
+        ret['permissions'] = {
+            'global': []
+        }
+
+        sql = "SELECT permission, channel FROM wcb_perms WHERE users_id = %s"
+        cur.execute(sql, (ret['id'],))
+        db_res = cur.fetchall()
+        for row in db_res:
+            if row['channel'] and row['channel'] != '':
+                if row['channel'] not in ret['permissions']:
+                    ret['permissions'][row['channel']] = []
+                ret['permissions'][row['channel']].append(row['permission'])
+            else:
+                ret['permissions']['global'].append(row['permission'])
+
+        ret['hostmasks'] = []
+        sql = "SELECT hostmask FROM wcb_hostmasks WHERE users_id = %s"
+        cur.execute(sql, (ret['id'],))
+        db_res = cur.fetchall()
+        for row in db_res:
+            for k in row.keys():
+                ret['hostmasks'].append(row[k])
+
+        cur.close()
+        db.close()
+        if ret == None:
+            return None
+        return ret
+
+
 
     ''' Functions useful to modules '''
     def mlog(self, message):
