@@ -23,22 +23,9 @@ def run(wcb, event):
         wcb.say("User '%s' was not found in the database." % merge_db_user)
         return wcb.weechat.WEECHAT_RC_OK
 
-    # Find referenced nick name in the originating event channel
-    infolist = wcb.weechat.infolist_get('irc_nick', '', '%s,%s' % (event['server'], event['channel']))
-    merge_userhost = ''
-    while wcb.weechat.infolist_next(infolist):
-        nick = wcb.weechat.infolist_string(infolist, 'name')
-        if nick != merge_irc_nick:
-            continue
-        host = wcb.weechat.infolist_string(infolist, 'host')
-        if host == '':
-            wcb.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
-            wcb.say('OOPS: WeeChat stale data. Try again!')
-            return wcb.weechat.WEECHAT_RC_OK
-        merge_userhost = '%s!%s' %(nick, host)                
-    wcb.weechat.infolist_free(infolist)
+    merge_userhost = wcb.get_userhost_by_ircnick(merge_ircnick)
 
-    if merge_userhost == '':
+    if not merge_userhost:
         wcb.say("Nick '%s' was not found in channel '%s.'" % (merge_irc_nick, event['channel']))
 
     # Don't merge users that are already identified.

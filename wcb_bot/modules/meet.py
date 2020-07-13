@@ -17,7 +17,9 @@ def run(wcb, event):
         wcb.reply("i know who i am.")
         return wcb.weechat.WEECHAT_RC_OK
 
-    db_user_info = wcb.db_get_userinfo_by_ircnick(tnick)
+    tuserhost = wcb.get_userhost_by_ircnick(tnick)
+
+    db_user_info = wcb.db_get_userinfo_by_userhost(tuserhost)
     if db_user_info != None:
         wcb.reply("an existing user named '%s' was found matching the host mask '%s'." % (db_user_info['username'], tuserhost))
         return wcb.weechat.WEECHAT_RC_OK

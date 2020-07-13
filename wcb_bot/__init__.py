@@ -513,3 +513,21 @@ class WeeChatBot:
             if channel in self.event['user_info']['permissions'] and want_perm in self.event['user_info']['permissions'][channel]:
                 return True
         return False
+
+
+    def get_userhost_by_ircnick(self, tnick):
+        # Find referenced nick name in the originating event channel
+        infolist = self.weechat.infolist_get('irc_nick', '', '%s,%s' % (self.event['server'], self.event['channel']))
+        tuserhost = None
+        while self.weechat.infolist_next(infolist):
+            nick = self.weechat.infolist_string(infolist, 'name')
+            if nick != tnick:
+                continue
+            host = self.weechat.infolist_string(infolist, 'host')
+            if host == '':
+                self.weechat.command(self.event['weechat_buffer'], '/who ' + self.event['channel'])
+                self.say('OOPS: WeeChat stale data. Try again!')
+                return self.weechat.WEECHAT_RC_OK
+            tuserhost = '%s!%s' %(nick, host)
+        self.weechat.infolist_free(infolist)
+        return tuserhost
