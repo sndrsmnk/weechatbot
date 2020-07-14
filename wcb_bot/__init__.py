@@ -46,7 +46,9 @@ class WeeChatBot:
             'udp_listen_ip':   '::ffff:127.0.0.1',
             'udp_listen_port': 46664,
             'udp_listen_pass': 'WeeChatBot',
-            'udp_debug':       False,
+
+            'debug_udp':       False,
+            'debug_event':     False,
 
             'db_host':         'localhost',
             'db_port':         '5432',
@@ -157,8 +159,9 @@ class WeeChatBot:
                 event['bot_is_op'] = True
                 break
 
-        pp = pprint.PrettyPrinter(indent=4)
-        dlog("Event:\n%s" % pp.pformat(event))
+        if self.state['debug_event']:
+            pp = pprint.PrettyPrinter(indent=4)
+            dlog("Event:\n%s" % pp.pformat(event))
 
         # Look for modules to handle this event.
         for module in list(self.modules):
@@ -267,7 +270,7 @@ class WeeChatBot:
                 return self.weechat.WEECHAT_RC_ERROR
             message = re.sub('^(\S+)\s', '', message)
 
-        if self.state['udp_debug']:
+        if self.state['debug_udp']:
             dlog("UDP message from [%s]:%s to '%s.%s': '%s'" % (host, port, server, channel, message))
 
         if server == 'undef': # Search for first matching buffer in any server
@@ -278,7 +281,7 @@ class WeeChatBot:
                 udp_output_buffer = self.weechat.buffer_search('irc', '(?i)'+target) # (?i) case insensitive
                 if udp_output_buffer:
                     self.weechat.command(udp_output_buffer, message)
-                    if self.state['udp_debug']:
+                    if self.state['debug_udp']:
                         dlog("Found channel '%s' in server '%s'" % (channel, irc_server_name))
                     self.weechat.infolist_free(servers)
                     return weechat.WEECHAT_RC_OK
