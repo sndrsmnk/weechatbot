@@ -100,6 +100,7 @@ class WeeChatBot:
         weechat.hook_signal("*,irc_in2_part",    "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_quit",    "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_topic",   "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_invite",  "shim_wcb_handle_event",     "")
 
         dlog("\nWeeChatBot initialization complete!")
 
@@ -133,11 +134,12 @@ class WeeChatBot:
         if not re.match('^[#&]', event['channel']):
             reply_buffer_name = event['target_username']
 
-        # Find the actual buffer
-        reply_buffer = self.weechat.buffer_search("irc", '(?i)' + reply_buffer_name) # (?i) case insensitive
-        if not reply_buffer:
-            dlog("Could not find reply_buffer for event: '%s'" % event)
-        event['weechat_buffer'] = reply_buffer
+        # Find the actual buffer, not all signals are associated with a single buffer, so we skip them.
+        if event['signal'] not in ['irc_in2_QUIT', 'irc_in2_INVITE']:
+            reply_buffer = self.weechat.buffer_search("irc", '(?i)' + reply_buffer_name) # (?i) case insensitive
+            if not reply_buffer:
+                dlog("Could not find reply_buffer for event: '%s'" % event)
+            event['weechat_buffer'] = reply_buffer
 
         # If this is a JOIN event, update WeeChat internal state with gratouitous '/WHO' on channel
         if event['signal'] == 'irc_in2_JOIN':
@@ -159,6 +161,11 @@ class WeeChatBot:
                 event['bot_is_op'] = True
                 break
 
+        # Fetch the event originator's user info
+        event['user_info'] = self.db_get_userinfo_by_userhost(event['host'])
+        self.event = event
+
+        # Log the event!
         if self.state['debug_event']:
             pp = pprint.PrettyPrinter(indent=4)
             dlog("Event:\n%s" % pp.pformat(event))
@@ -174,9 +181,6 @@ class WeeChatBot:
 
             # Found one?
             if event['trigger']:
-                event['user_info'] = self.db_get_userinfo_by_userhost(event['host'])
-                self.event = event
-
                 # Check permissions and run if allowed.
                 if not self.perms(self.modules[module]['permissions']):
                     dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
