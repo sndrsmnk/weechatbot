@@ -110,7 +110,6 @@ CREATE TABLE wcb_quotes (
 
     users_id INT NOT NULL,
     quote TEXT NOT NULL,
-    quote_score INT NOT NULL DEFAULT 0,
     channel VARCHAR(150) NOT NULL,
 
     insert_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
