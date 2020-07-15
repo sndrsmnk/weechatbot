@@ -89,7 +89,7 @@ class WeeChatBot:
         
         # Compile configurable regexps for matching in event handlers
         self.re_trigger = re.compile(self.state['bot_trigger_re'])
-        self.re_command = re.compile(self.state['bot_command_re'])
+        self.re_command = re.compile(self.state['bot_trigger_re'] + self.state['bot_command_re'])
 
         self.setup_udp_listener()
 
@@ -99,6 +99,7 @@ class WeeChatBot:
         weechat.hook_signal("*,irc_in2_join",    "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_part",    "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_quit",    "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in_topic",    "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_topic",   "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_invite",  "shim_wcb_handle_event",     "")
 
@@ -363,7 +364,7 @@ class WeeChatBot:
             dlog(rstr)
             return rstr
 
-        module_config = module_object.config()
+        module_config = module_object.config(self)
         for test_key in ['events', 'commands', 'help']:
             if test_key not in module_config:
                 rstr = "Module '%s' config does not provide '%s' key. Failed." % (module_name, test_key)

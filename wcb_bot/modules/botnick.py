@@ -1,4 +1,4 @@
-def config():
+def config(wcb):
     return {
         'events': [],
         'commands': ['botnick'],

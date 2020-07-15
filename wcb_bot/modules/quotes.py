@@ -2,7 +2,7 @@ import psycopg2.extras
 import random
 
 
-def config():
+def config(wcb):
     return {
         'events': [],
         'commands': [

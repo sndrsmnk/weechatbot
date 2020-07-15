@@ -1,4 +1,4 @@
-def config():
+def config(wcb):
     return {
         'events': ['irc_in2_INVITE'],
         'commands': ['join', 'part'],
