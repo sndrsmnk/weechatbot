@@ -14,7 +14,7 @@ def config(wcb):
             'q', 'quote'
             ],
         'permissions': ['user', 'forget'],
-        'help': "Helps with claiming bot ownership when the bot has not been claimed before\nUsage: !owner <bot_uniqueid>",
+        'help': "Records and displays channel quotes"
     }
 
 
