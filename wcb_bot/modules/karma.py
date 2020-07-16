@@ -23,14 +23,14 @@ def run(wcb, event):
     if not wcb.re.match(wcb.state['bot_trigger_re'], event['text']):
         return
     # Strip off bot_trigger_re from text
-    event['text'] = wcb.re.sub(wcb.state['bot_trigger_re'], '', event['text'])
+    event_text = wcb.re.sub(wcb.state['bot_trigger_re'], '', event['text'])
 
     # We gonna need some DB yo.
     db = wcb.db_connect()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
 
     # Check for a karma up / down event (eg, !foo++)
-    res = wcb.re.match("^(.+?)\s*([\+\-]{2})(?:\s*#\s*(.*))?", event['text'])
+    res = wcb.re.match("^(.+?)\s*([\+\-]{2})(?:\s*#\s*(.*))?", event_text)
     if res:
         item = res.group(1)
         direction = res.group(2)
@@ -192,7 +192,7 @@ def run(wcb, event):
         return wcb.reply(rtxt)
 
 
-    res = wcb.re.match("^set\-?karma\s+(.+?)\s+([-0-9]+)", event['text'])
+    res = wcb.re.match("^set\-?karma\s+(.+?)\s+([-0-9]+)", event_text)
     if res:
         if not wcb.perms(["owner", "set-karma"]): return wcb.reply("i can't let you do that.")
         item = res.group(1)
@@ -202,7 +202,3 @@ def run(wcb, event):
         cur.execute(sql, (item, value, event['channel'], value))
         db.commit()
         return wcb.reply("ok.")
-
-
-    wcb.mlog("unhandled..." + event['text'])
-
