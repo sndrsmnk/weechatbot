@@ -1,13 +1,16 @@
 def config(wcb):
+    if 'infoitem_shared_knowledge' not in wcb.state:
+        wcb.state['infoitem_shared_knowledge'] = False
+        wcb.save_configuration()
+
     return {
         'events': ['irc_in2_PRIVMSG'],
         'commands': [],
         'permissions': ['user'],
-        'help': "Get and set info items."
+        'help': "Get and set info items.\nBy default infoitems are kept per channel.\nSet 'infoitem_shared_knowledge' in config to True to disable."
     }
 
 
-# 'text': '!foobar = blaap',
 def run(wcb, event):
     if event['command'] == 'forget':
         if not wcb.perms('forget'):
@@ -57,7 +60,12 @@ def run(wcb, event):
             
             db = wcb.db_connect()
             cur = db.cursor()
-            sql = "SELECT value FROM wcb_infoitems WHERE item = %s AND channel = %s ORDER BY insert_time ASC"
+
+            sql = "SELECT value FROM wcb_infoitems WHERE item = %s"
+            if not wcb.state['infoitem_shared_knowledge']:
+                sql += " AND channel = %s"
+            sql += " ORDER BY insert_time ASC"
+
             cur.execute(sql, (db_k, event['channel']))
             res = cur.fetchall()
             defstr = []

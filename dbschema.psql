@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS wcb_infoitems;
 DROP TABLE IF EXISTS wcb_perms;
 DROP TABLE IF EXISTS wcb_hostmasks;
 DROP TABLE IF EXISTS wcb_users;
+DROP TYPE wcb_karma_direction;
 
 CREATE TABLE wcb_users (
     id SERIAL PRIMARY KEY,
@@ -21,6 +22,8 @@ CREATE TABLE wcb_hostmasks (
 
     PRIMARY KEY (id, users_id, hostmask),
 
+    UNIQUE (hostmask),
+
     CONSTRAINT wcb_users_id_fkey FOREIGN KEY (users_id)
       REFERENCES wcb_users (id) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
@@ -35,6 +38,9 @@ CREATE TABLE wcb_perms (
     channel VARCHAR(150) NOT NULL DEFAULT '',
 
     PRIMARY KEY (id, users_id, permission, channel),
+
+    UNIQUE (users_id, permission), 
+
     CONSTRAINT wcb_users_id_fkey FOREIGN KEY (users_id)
       REFERENCES wcb_users (id) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
@@ -125,5 +131,5 @@ CREATE TABLE wcb_quotes (
       ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
-INSERT INTO wcb_users (username, insert_time) VALUES ('gozerbot_import_user', NOW());
-INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (1, 'non existent user');
+INSERT INTO wcb_users (username) VALUES ('gozerbot_import_user');
+INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (1, 'gozerbot_import_user');
