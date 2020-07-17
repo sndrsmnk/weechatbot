@@ -17,23 +17,27 @@ def run(wcb, event):
     fdb = sqlite3.connect(fdb_file)
 
     cur = fdb.cursor()
-    sql = "CREATE TABLE IF NOT EXISTS fipo (date varchar(8) primary key, channel text, username text)"
+    sql = "CREATE TABLE IF NOT EXISTS fipo (date VARCHAR(8) PRIMARY KEY, channel TEXT, username TEXT, UNIQUE(date, channel))"
     cur.execute(sql)
     fdb.commit()
 
     if event['command'] == 'fipo':
         today = dateobj.today()
         todaystr = today.strftime("%Y%m%d")
-        
-        sql = "SELECT username FROM fipo WHERE date = ? AND channel = ?"
-        cur.execute(sql, (todaystr, event['channel']))
+
+        sql = "SELECT username FROM fipo WHERE date = ?"
+        sql_arr = [todaystr]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = ?"
+            sql_arr.append(event['channel'])
+        cur.execute(sql, sql_arr)
         res = cur.fetchone()
         if not res:
             sql = "INSERT INTO fipo (date, channel, username) VALUES (?, ?, ?)"
             cur.execute(sql, (todaystr, event['channel'], event['user_info']['username']))
             fdb.commit()
             return wcb.say("w00t! :D")
-        
+
         if res[0] == event['user_info']['username']:
             return wcb.say("Yes! :D  It was YOU!  YOU SCORED TODAY'S FIPO!!  \\o/")
 
@@ -48,7 +52,7 @@ def run(wcb, event):
         db_user = wcb.db_get_userinfo_by_username(nick)
         if not db_user:
             return wcb.reply("a user named '%s' was not found." % nick)
-        sql = "INSERT INTO fipo (date, channel, username) VALUES (?, ?, ?) ON CONFLICT (date) DO UPDATE SET username = ?"
+        sql = "INSERT INTO fipo (date, channel, username) VALUES (?, ?, ?) ON CONFLICT (date, channel) DO UPDATE SET username = ?"
         cur.execute(sql, (date, event['channel'], nick, nick))
         fdb.commit()
         return wcb.say("Fipo for %s set to '%s'" % (date, nick))
@@ -56,8 +60,12 @@ def run(wcb, event):
 
     if event['command'] == 'fiporeset':
         if not wcb.perms('owner'): return
-        sql = "DELETE FROM fipo WHERE channel = ?"
-        cur.execute(sql, (event['channel'],))
+        sql_arr = []
+        sql = "DELETE FROM fipo"
+        if not wcb.state['bot_shared_knowledge']:
+            sql_arr.append(event['channel]'])
+            sql += "WHERE channel = ?"
+        cur.execute(sql, sql_arr)
         fdb.commit()
         return wcb.say("Fipo has been reset.")
 
@@ -65,8 +73,13 @@ def run(wcb, event):
     if event['command'] == 'fipostats':
         lookup_username = event['command_args']
 
-        sql = "SELECT date, username FROM fipo WHERE channel = ? ORDER BY date ASC"
-        cur.execute(sql, (event['channel'],))
+        sql_arr = []
+        sql = "SELECT date, username FROM fipo"
+        if not wcb.state['bot_shared_knowledge']:
+            sql_arr.append(event['channel]'])
+            sql += " WHERE channel = ?"
+        sql += " ORDER BY date ASC"
+        cur.execute(sql, sql_arr)
         rows = cur.fetchall()
         if not rows:
             return wcb.say("No fipo's yet! Quick!!")

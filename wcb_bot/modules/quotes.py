@@ -42,8 +42,12 @@ def run(wcb, event):
         if not quote_id.isnumeric():
             return wcb.say("Argument must me quote id, not '%s'" % quote_id)
 
-        sql = "DELETE FROM wcb_quotes WHERE id = %s AND channel = %s"
-        cur.execute(sql, (quote_id, event['channel']))
+        sql = "DELETE FROM wcb_quotes WHERE id = %s"
+        sql_args = [quote_id]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_args.append(event['channel'])
+        cur.execute(sql, sql_args)
         db.commit()
         return wcb.reply("quote #%s deleted." % quote_id)
 
@@ -52,8 +56,12 @@ def run(wcb, event):
         if not quote_id.isnumeric():
             return wcb.say("Argument must me quote id, not '%s'" % quote_id)
 
-        sql = "SELECT * FROM wcb_quotes WHERE id = %s AND channel = %s"
-        cur.execute(sql, (quote_id, event['channel']))
+        sql = "SELECT * FROM wcb_quotes WHERE id = %s"
+        sql_args = [quote_id]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_args.append(event['channel'])
+        cur.execute(sql, sql_args)
         res = cur.fetchone()
         if not res:
             return wcb.reply("there is no quote with id #%s" % quote_id)
@@ -66,8 +74,12 @@ def run(wcb, event):
         if not pattern or pattern == '':
             return wcb.reply("please specify a search pattern.")
 
-        sql = "SELECT * FROM wcb_quotes WHERE channel = %s AND quote SIMILAR TO %s"
-        cur.execute(sql, (event['channel'], '%'+pattern+'%'))
+        sql = "SELECT * FROM wcb_quotes WHERE quote SIMILAR TO %s"
+        sql_args = ['%'+pattern+'%']
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_args.append(event['channel'])
+        cur.execute(sql, sql_args)
         rows = cur.fetchall()
         if not rows:
             return wcb.reply("no quotes matched '%s'" % pattern)
@@ -85,8 +97,13 @@ def run(wcb, event):
             count = 3
 
         quote_ids = []
-        sql = "SELECT id FROM wcb_quotes WHERE channel = %s ORDER BY insert_time ASC"
-        cur.execute(sql, (event['channel'],))
+        sql = "SELECT id FROM wcb_quotes "
+        sql_args = []
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " WHERE channel = %s "
+            sql_args.append(event['channel'])
+        sql += "ORDER BY insert_time ASC"
+        cur.execute(sql, sql_args)
         rows = cur.fetchall()
         for row in rows:
             quote_ids.append(row['id'])
@@ -109,8 +126,13 @@ def run(wcb, event):
         if '3' in event['command']:
             count = 3
 
-        sql = "SELECT * FROM wcb_quotes WHERE channel = %s ORDER BY insert_time DESC LIMIT 3"
-        cur.execute(sql, (event['channel'],))
+        sql = "SELECT * FROM wcb_quotes "
+        sql_args = []
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " WHERE channel = %s "
+            sql_args.append(event['channel'])
+        sql += "ORDER BY insert_time DESC LIMIT 3"
+        cur.execute(sql, sql_args)
         rows = cur.fetchall()
         if not rows:
             return wcb.reply("there's no quotes on this channel.")
@@ -129,7 +151,12 @@ def run(wcb, event):
         if not quote_id.isnumeric():
             return wcb.say("Argument must me quote id, not '%s'" % quote_id)
 
-        sql = "SELECT wq.*, wu.username FROM wcb_quotes wq, wcb_users wu WHERE wq.users_id = wu.id and wq.channel = %s AND wq.id = %s"
+        sql = "SELECT wq.*, wu.username FROM wcb_quotes wq, wcb_users wu WHERE wq.users_id = wu.id"
+        sql_args = []
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND wq.channel = %s"
+            sql_args.append(event['channel'])
+        sql += " AND wq.id = %s"
         cur.execute(sql, (event['channel'], quote_id))
         row = cur.fetchone()
         if not row:

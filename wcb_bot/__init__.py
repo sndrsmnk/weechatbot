@@ -42,7 +42,13 @@ class WeeChatBot:
             'bot_ownermask': '',
 
             'bot_trigger_re': '^\.',
-            'bot_command_re': '([-a-zA-Z0-9]+)(?:\s(.*)|$)', # this RE must return the command in \1 and the rest in \2
+
+            # This regexp must return the command the 'arguments' via (grou)(ping)
+            'bot_command_re': '([-a-zA-Z0-9]+)(?:\s(.*)|$)',
+
+            # By default stuff like quotes, karma and infoitems are kept separate per channel.
+            # '!set bot_shared_knowledge True' to disable and 'share the knowledge' between channels.
+            'bot_shared_knowledge': False,
 
             'udp_listen_ip':   '::ffff:127.0.0.1',
             'udp_listen_port': 46664,

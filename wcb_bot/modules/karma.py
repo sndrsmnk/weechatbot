@@ -75,9 +75,13 @@ def run(wcb, event):
     if event['command'] == 'karma':
         item = event['command_args']
         if item == '': return wcb.reply('please specify a karma item to lookup.')
-        
-        sql = "SELECT * FROM wcb_karma WHERE item = %s AND channel = %s"
-        cur.execute(sql, (item, event['channel']))
+
+        sql = "SELECT * FROM wcb_karma WHERE item = %s"
+        sql_arr = [item]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_arr.append(event['channel'])
+        cur.execute(sql, sql_arr)
         res = cur.fetchone()
         if not res:
             return wcb.reply("'%s' has no karma." % item)
@@ -93,12 +97,21 @@ def run(wcb, event):
         item = event['command_args']
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
-        sql = "SELECT * FROM wcb_karma WHERE item = %s AND channel = %s"
-        cur.execute(sql, (item, event['channel']))
+        sql = "SELECT * FROM wcb_karma WHERE item = %s"
+        sql_arr = [item]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_arr.append(event['channel'])
+        cur.execute(sql, sql_arr)
         karma_item = cur.fetchone()
 
-        sql = "SELECT reason FROM wcb_karma_why WHERE karma_id = %s AND direction = %s AND channel = %s ORDER BY update_time DESC LIMIT 10"
-        cur.execute(sql, (karma_item['id'], direction, event['channel']))
+        sql = "SELECT reason FROM wcb_karma_why WHERE karma_id = %s AND direction = %s"
+        sql_arr = [karma_item['id'], direction]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_arr.append(event['channel'])
+        sql += " ORDER BY update_time DESC LIMIT 10"
+        cur.execute(sql, sql_arr)
         karma_why_rows = cur.fetchall()
         why_arr = []
         if karma_why_rows:
@@ -117,12 +130,20 @@ def run(wcb, event):
         item = event['command_args']
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
-        sql = "SELECT * FROM wcb_karma WHERE item = %s AND channel = %s"
-        cur.execute(sql, (item, event['channel']))
+        if wcb.state['bot_shared_knowledge']:
+            sql = "SELECT *, SUM(karma) AS karma FROM wcb_karma WHERE item = %s"
+            sql_arr = [item]
+        else:
+            sql = "SELECT * FROM wcb_karma WHERE item = %s AND channel = %s"
+            sql_arr = [item, event['channel']]
+
+        cur.execute(sql, sql_arr)
         karma_item = cur.fetchone()
         if not karma_item:
             return wcb.reply("'%s' has no karma." % item)
 
+        # XXX undefined results with shared_knowledge enabled and item is defined in multiple channels
+        #     current assumption is item,channel is unique.
         sql = """SELECT u.username, kwho.amount, k.item
                FROM wcb_users u, wcb_karma_who kwho, wcb_karma k
                WHERE u.id = kwho.users_id
@@ -145,8 +166,13 @@ def run(wcb, event):
         sql_direction = "ASC"
         if direction == "good": sql_direction = "DESC" 
 
-        sql = "SELECT item, karma FROM wcb_karma WHERE channel = %s ORDER BY karma " + sql_direction + " LIMIT 10"
-        cur.execute(sql, (event['channel'],))
+        sql = "SELECT item, karma FROM wcb_karma"
+        sql_arr = []
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " WHERE channel = %s"
+            sql_arr.append(event['channel'])
+        sql += " ORDER BY karma " + sql_direction + " LIMIT 10"
+        cur.execute(sql, sql_arr)
         rows = cur.fetchall()
         if not rows:
             return wcb.reply("there is no %sness here." % direction)
@@ -168,8 +194,12 @@ def run(wcb, event):
         db_dir = "up"
         if direction == 'haters': db_dir = "down"
 
-        sql = "SELECT * FROM wcb_karma WHERE item = %s AND channel = %s"
-        cur.execute(sql, (item, event['channel']))
+        sql = "SELECT * FROM wcb_karma WHERE item = %s"
+        sql_arr = [item]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_arr.append(event['channel'])
+        cur.execute(sql, sql_arr)
         karma_item = cur.fetchone()
         if not karma_item:
             return wcb.reply("no such karma item, '%s'" % item)

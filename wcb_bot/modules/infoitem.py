@@ -1,13 +1,9 @@
 def config(wcb):
-    if 'infoitem_shared_knowledge' not in wcb.state:
-        wcb.state['infoitem_shared_knowledge'] = False
-        wcb.save_configuration()
-
     return {
         'events': ['irc_in2_PRIVMSG'],
         'commands': [],
         'permissions': ['user'],
-        'help': "Get and set info items.\nBy default infoitems are kept per channel.\nSet 'infoitem_shared_knowledge' in config to True to disable."
+        'help': "Get and set info items.\nBy default infoitems are kept per channel.\nSet 'bot_shared_knowledge' in config to True to disable."
     }
 
 
@@ -62,14 +58,20 @@ def run(wcb, event):
             cur = db.cursor()
 
             sql = "SELECT value FROM wcb_infoitems WHERE item = %s"
-            if not wcb.state['infoitem_shared_knowledge']:
+            sql_args = [db_k]
+
+            if not wcb.state['bot_shared_knowledge']:
                 sql += " AND channel = %s"
+                sql_args.append(event['channel'])
+
             sql += " ORDER BY insert_time ASC"
 
-            cur.execute(sql, (db_k, event['channel']))
+            cur.execute(sql, sql_args)
             res = cur.fetchall()
             defstr = []
             for val in res:
                 defstr.append(val[0])
             retstr = " .. ".join(defstr)
+            if retstr == '':
+                return wcb.say('%s is not defined.' % pub_k)
             return wcb.say("%s is %s" % (pub_k, retstr))

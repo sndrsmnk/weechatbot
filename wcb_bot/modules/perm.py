@@ -20,6 +20,7 @@ def run(wcb, event):
     channel = ''
     if wcb.re.match('^[#&]', args_arr[-1]):
         channel = args_arr.pop(-1)
+
     # args_arr should now only hold permissions to set
 
     nick_userinfo = wcb.db_get_userinfo_by_ircnick(nick)
