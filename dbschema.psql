@@ -51,8 +51,8 @@ CREATE TABLE wcb_infoitems (
 
     users_id INT NOT NULL,
 
-    item VARCHAR(50) NOT NULL,
-    value VARCHAR(150) NOT NULL,
+    item text NOT NULL,
+    value text NOT NULL,
     channel VARCHAR(150) NOT NULL,
     insert_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -66,7 +66,7 @@ CREATE TABLE wcb_infoitems (
 CREATE TABLE wcb_karma (
     id SERIAL UNIQUE,
 
-    item VARCHAR(50) NOT NULL,
+    item text NOT NULL,
     karma INT NOT NULL DEFAULT 0,
     channel VARCHAR(150) NOT NULL,
 
