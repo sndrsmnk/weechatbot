@@ -351,10 +351,9 @@ class WeeChatBot:
 
 
     def load_module(self, module, quiet=False):
-        module_name = module
+        module_name = os.path.basename(module)
         if '.py' in module[-3:]:
             module_name = module[:-3]
-        module_name = os.path.basename(module_name)
 
         if '/' not in module:
             module_full_path = self.state['bot_modules'] + '/' + module + '.py'
