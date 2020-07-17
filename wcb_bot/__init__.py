@@ -33,28 +33,29 @@ class WeeChatBot:
         self.udp_socket_open = False
         self.modules = {}
         self.state = {
-            'bot_base':        bot_base,
-            'bot_modules':     '%s/modules' % bot_base,
-            'bot_config':      '%s/wcb_config.json' % bot_base,
+            'bot_base':          bot_base,
+            'bot_modules':       '%s/modules' % bot_base,
+            'bot_extra_modules': '%s/extra_modules' % bot_base,
+            'bot_config':        '%s/wcb_config.json' % bot_base,
 
-            'bot_uniqueid':    ''.join(random.sample('abcdefghijklmnopqrstuvwxyzABCFEFGHIJKLMNOPQRSTUVWXYZ1234567890', 8)),
-            'bot_ownermask':   '',
+            'bot_uniqueid':  ''.join(random.sample('abcdefghijklmnopqrstuvwxyzABCFEFGHIJKLMNOPQRSTUVWXYZ1234567890', 8)),
+            'bot_ownermask': '',
 
-            'bot_trigger_re':  '^\.',
-            'bot_command_re':  '([-a-zA-Z0-9]+)(?:\s(.*)|$)', # this RE must return the command in \1 and the rest in \2
+            'bot_trigger_re': '^\.',
+            'bot_command_re': '([-a-zA-Z0-9]+)(?:\s(.*)|$)', # this RE must return the command in \1 and the rest in \2
 
             'udp_listen_ip':   '::ffff:127.0.0.1',
             'udp_listen_port': 46664,
             'udp_listen_pass': 'WeeChatBot',
 
-            'debug_udp':       False,
-            'debug_event':     False,
+            'debug_udp':   False,
+            'debug_event': False,
 
-            'db_host':         'localhost',
-            'db_port':         '5432',
-            'db_user':         'weechatbot',
-            'db_pass':         'xyz',
-            'db_name':         'weechatbot',
+            'db_host': 'localhost',
+            'db_port': '5432',
+            'db_user': 'weechatbot',
+            'db_pass': 'xyz',
+            'db_name': 'weechatbot',
         }
 
         for path in (self.state['bot_base'], self.state['bot_modules']):
@@ -335,6 +336,10 @@ class WeeChatBot:
     ''' Module loading, unloading, reloading '''
     def load_all_modules(self):
         for ent in os.listdir(self.state['bot_modules']):
+            if ent[-3:] != '.py':
+                continue
+            self.load_module(ent, quiet=True)
+        for ent in os.listdir(self.state['bot_extra_modules']):
             if ent[-3:] != '.py':
                 continue
             self.load_module(ent, quiet=True)
