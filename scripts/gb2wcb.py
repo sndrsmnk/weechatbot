@@ -3,12 +3,12 @@ import MySQLdb
 
 dbi_h = 'services.freshdot.net'
 dbi_u = 'irssibot'
-dbi_p = 'edoShus5'
+dbi_p = 'x'
 dbi_d = 'irssibot'
 
 dbo_h = 'localhost'
 dbo_u = 'weechatbot'
-dbo_p = 'Aeyee1Aijei1'
+dbo_p = 'y'
 dbo_d = 'weechatbot'
 
 dbi = MySQLdb.connect(user = dbi_u, passwd = dbi_p, host = dbi_h, db = dbi_d)
