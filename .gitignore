@@ -1,5 +1,5 @@
 wcb_bot/wcb_config.json
 wcb_bot/module_fipo.sqlite3
 wcb_bot/extra_modules/*
-wcb_bot/extra_modules/.gitkeep
+!wcb_bot/extra_modules/.gitkeep
 dbshell.sh
