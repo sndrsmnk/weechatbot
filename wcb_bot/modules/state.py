@@ -2,7 +2,7 @@ def config(wcb):
     return {
         'events': [],
         'commands': ['save', 'set', 'get', 'del', 'list'],
-        'permissions': ['save', 'set', 'get', 'del', 'list'],
+        'permissions': ['owner'],
         'help': "Saves, sets and gets bot configuration"
     }
 

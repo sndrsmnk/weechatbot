@@ -335,23 +335,33 @@ class WeeChatBot:
 
     ''' Module loading, unloading, reloading '''
     def load_all_modules(self):
+        mods = []
         for ent in os.listdir(self.state['bot_modules']):
             if ent[-3:] != '.py':
                 continue
-            self.load_module(ent, quiet=True)
+            mods.append(self.state['bot_modules'] + '/' + ent)
         for ent in os.listdir(self.state['bot_extra_modules']):
             if ent[-3:] != '.py':
                 continue
-            self.load_module(ent, quiet=True)
+            mods.append(self.state['bot_extra_modules'] + '/' + ent)
+        for mod in mods:
+            self.load_module(mod, quiet=True)
         mlist = ", ".join(self.modules.keys())
         return dlog("Loaded modules: [%s]" % mlist)
 
 
-    def load_module(self, module_name, quiet=False):
-        if '.py' in module_name[-3:]:
-            module_name = module_name[:-3]
+    def load_module(self, module, quiet=False):
+        module_name = module
+        if '.py' in module[-3:]:
+            module_name = module[:-3]
+        module_name = os.path.basename(module_name)
 
-        module_full_path = self.state['bot_modules'] + '/' + module_name + '.py'
+        if '/' not in module:
+            module_full_path = self.state['bot_modules'] + '/' + module + '.py'
+            if not os.path.exists(module_full_path):
+                module_full_path = self.state['bot_extra_modules'] + '/' + module + '.py'
+        else:
+            module_full_path = module
 
         module_object = ''
         try:
