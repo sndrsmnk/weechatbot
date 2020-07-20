@@ -1,27 +1,33 @@
 WeechatBot
 ====
 This is an IRC bot implementation built with Weechat Python scripting.<br/>
-(c) 2014, 2015, 2016, 2017, 2018, 2019 GPLv2+ - There may be dragons.
+(c) 2020 GPLv2+ - There may be dragons.
 
 You may need some or all of these Ubuntu packages: weechat, python3-psycopg2, python3-pycurl
 
 Quick install guide:
 ----
+ * This needs a PostgreSQL database. Schema is in `$GITHOME/dbschema.psql`.
+
  * Create a new user '**weechatbot**' (or joe, polly or finnigan...)
- * Start weechat, quit weechat. This creates ~/.weechat/
+ * Start weechat 2.8+, Python 3+, quit weechat. This creates ~/.weechat/
+
  * Checkout this repo in $HOME
 ```sh
 $ cd $HOME
 $ git clone https://github.com/sndrsmnk/weechatbot.git
 ```
+
  * Set some symlinks for Weechat:
 ```sh
 $ ln -sf ~/weechatbot/wcb.py .weechat/python/wcb.py
 $ ln -sf ~/weechatbot/wcb_bot .weechat/python/wcb_bot
 $ ln -sf ~/.weechat/python/wcb.py ~/.weechat/python/autoload/wcb.py
 ```
+
  * Start Weechat, fix WeeChatBot loading errors by installing missing dependencies
- * Quit Weechat, edit `~/.weechat/python/wcb_bot/wcb_config.jsn` and update `db_*` info
+
+ * Quit Weechat, edit `~/.weechat/python/wcb_bot/wcb_config.json` and update `db_*` info
 
  * Start Weechat, read the script output in WeeChatbot status window as it shows the '**unique id**' of the bot and how to claim ownership.
  * Set up Weechat as you would normally do, configure networks, servers, channels, specify auto{connect,join} etc.
@@ -29,14 +35,11 @@ $ ln -sf ~/.weechat/python/wcb.py ~/.weechat/python/autoload/wcb.py
    * `/server add someNetwork someServer.tld/port -autoconnect`
    * `/join #yourChannel`
    * `/autojoin --run`
- * Join IRC, claim the bot, use !help, **read the source** and remember that i didn't write this for you, i wrote this for me. ;)
- * I would advise not to run other plugins with this bot, they may clash.
+
+ * Join IRC with your own client and claim the bot, use !help, **read the source** and remember that i didn't write this for you, i wrote this for me. ;)
+
+ * I would advise to take care with other plugins and this bot, they may clash.
  * You might want to disable Weechat's flood protection features if you plan to use the UDP listener a lot.
-
-
-Database
---------
-This wants a PostgreSQL database. Schema is in `$GITHOME/dbschema.psql`
 
 
 UDP listener
