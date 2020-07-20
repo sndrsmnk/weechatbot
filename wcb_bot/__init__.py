@@ -447,6 +447,7 @@ class WeeChatBot:
 
     def db_get_userinfo_by_userhost(self, host):
         ret = {}
+        host = host.lower()
 
         db = self.db_connect()
         cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
@@ -492,6 +493,7 @@ class WeeChatBot:
 
     def db_get_userinfo_by_username(self, username):
         ret = {}
+        username = username.lower()
 
         db = self.db_connect()
         cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
@@ -573,7 +575,7 @@ class WeeChatBot:
             return False
         if 'owner' in self.event['user_info']['permissions']['global']: # owner, by permission
             return True
-        channel = self.event['channel']
+        channel = self.event['channel'].lower()
         for want_perm in want_perms:
             if want_perm in self.event['user_info']['permissions']['global']:
                 return True

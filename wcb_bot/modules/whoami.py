@@ -29,7 +29,7 @@ def run(wcb, event):
             db = wcb.db_connect()
             cur = db.cursor()
             sql = "SELECT * FROM wcb_users WHERE username ILIKE %s"
-            cur.execute(sql, (event['nick'],))
+            cur.execute(sql, (event['nick'].lower(),))
             res = cur.fetchone()
             if res:
                 rtxt += ", but a user was found in the DB, perhaps you need a merge?"

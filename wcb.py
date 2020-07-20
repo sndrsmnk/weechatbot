@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
+#
 # WeeChatBot (WCB), ©2020 Sander Smeenk <github@freshdot.net>
 #
 SN = 'wcb'

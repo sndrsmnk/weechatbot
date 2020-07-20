@@ -34,7 +34,7 @@ def run(wcb, event):
         counter = 0
         sql = "INSERT INTO wcb_perms (users_id, permission, channel) VALUES (%s, %s, %s)"
         for permission in args_arr:
-            cur.execute(sql, (nick_userinfo['id'], permission, channel))
+            cur.execute(sql, (nick_userinfo['id'], permission, channel.lower()))
             counter += 1
         db.commit(); cur.close(); db.close()
         return wcb.say("Added %d permissions to '%s'" % (counter, nick))
@@ -43,7 +43,7 @@ def run(wcb, event):
         counter = 0
         sql = "DELETE FROM wcb_perms WHERE users_id = %s AND permission = %s AND channel = %s"
         for permission in args_arr:
-            cur.execute(sql, (nick_userinfo['id'], permission, channel))
+            cur.execute(sql, (nick_userinfo['id'], permission, channel.lower()))
             counter += 1
         db.commit(); cur.close(); db.close()
         return wcb.say("Removed %d permissions from '%s'" % (counter, nick))

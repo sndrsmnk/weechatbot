@@ -51,8 +51,8 @@ CREATE TABLE wcb_infoitems (
 
     users_id INT NOT NULL,
 
-    item text NOT NULL,
-    value text NOT NULL,
+    item TEXT NOT NULL,
+    value TEXT NOT NULL,
     channel VARCHAR(150) NOT NULL,
     insert_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -66,7 +66,7 @@ CREATE TABLE wcb_infoitems (
 CREATE TABLE wcb_karma (
     id SERIAL UNIQUE,
 
-    item text NOT NULL,
+    item TEXT NOT NULL,
     karma INT NOT NULL DEFAULT 0,
     channel VARCHAR(150) NOT NULL,
 
@@ -81,7 +81,7 @@ CREATE TABLE wcb_karma_why (
     karma_id INT NOT NULL,
 
     direction wcb_karma_direction NOT NULL,
-    reason VARCHAR(150) NOT NULL,
+    reason TEXT NOT NULL,
     channel VARCHAR(150) NOT NULL,
 
     update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

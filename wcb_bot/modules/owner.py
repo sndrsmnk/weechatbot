@@ -25,10 +25,10 @@ def run(wcb, event):
     cur = db.cursor()
 
     sql = "INSERT INTO wcb_users (username) VALUES (%s)"
-    cur.execute(sql, (event['nick'],))
+    cur.execute(sql, (event['nick'].lower(),))
 
     sql = "SELECT id FROM wcb_users WHERE username = %s"
-    cur.execute(sql, (event['nick'],))
+    cur.execute(sql, (event['nick'].lower(),))
     res = cur.fetchone()
     if res == None:
         return wcb.mlog("Error looking up users_id!")
@@ -36,7 +36,7 @@ def run(wcb, event):
     tuserid = res[0]
 
     sql = "INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (%s, %s)"
-    cur.execute(sql, (tuserid, tuserhost))
+    cur.execute(sql, (tuserid, tuserhost.lower()))
 
     sql = "INSERT INTO wcb_perms (users_id, permission) VALUES (%s, 'owner')"
     cur.execute(sql, (tuserid,))
