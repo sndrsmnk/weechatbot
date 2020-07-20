@@ -8,9 +8,9 @@ def config(wcb):
 
 
 def run(wcb, event):
-    rtxt = "you are %s at %s" % (event['nick'], event['host'])
+    rtxt = "you are %s at %s" % (event['nick'], event['nickmask'])
 
-    if event['host'] == wcb.state['bot_ownermask']:
+    if event['nickmask'] == wcb.state['bot_ownermask']:
         rtxt += ", and YOU are my owner!"
     else:
         if event['user_info'] and event['user_info']['username']:

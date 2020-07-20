@@ -32,7 +32,7 @@ def run(wcb, event):
     # Check for a karma up / down event (eg, !foo++)
     res = wcb.re.match("^(.+?)\s*([\+\-]{2})(?:\s*#\s*(.*))?", event_text)
     if res:
-        item = res.group(1)
+        item = res.group(1).lower()
         direction = res.group(2)
         reason = res.group(3)
 
@@ -73,7 +73,7 @@ def run(wcb, event):
 
 
     if event['command'] == 'karma':
-        item = event['command_args']
+        item = event['command_args'].lower()
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
         sql = "SELECT * FROM wcb_karma WHERE item = %s"
@@ -94,7 +94,7 @@ def run(wcb, event):
     res = wcb.re.match("^(?:karma-why|why-karma|why)\-?(up|down)", event['command'])
     if res:
         direction = res.group(1)
-        item = event['command_args']
+        item = event['command_args'].lower()
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
         sql = "SELECT * FROM wcb_karma WHERE item = %s"
@@ -127,7 +127,7 @@ def run(wcb, event):
     res = wcb.re.match("^(?:karma-who|who-karma|who)\-?(up|down)", event['command'])
     if res:
         direction = res.group(1)
-        item = event['command_args']
+        item = event['command_args'].lower()
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
         if wcb.state['bot_shared_knowledge']:
@@ -188,7 +188,7 @@ def run(wcb, event):
     res = wcb.re.match("^(fans|haters)", event['command'])
     if res:
         direction = res.group(1)
-        item = event['command_args']
+        item = event['command_args'].lower()
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
         db_dir = "up"
@@ -225,7 +225,7 @@ def run(wcb, event):
     res = wcb.re.match("^set\-?karma\s+(.+?)\s+([-0-9]+)", event_text)
     if res:
         if not wcb.perms(["owner", "set-karma"]): return wcb.reply("i can't let you do that.")
-        item = res.group(1)
+        item = res.group(1).lower()
         value = res.group(2)
 
         sql = "INSERT INTO wcb_karma (item, karma, channel) VALUES (%s, %s, %s) ON CONFLICT (item, channel) DO UPDATE SET karma = %s"

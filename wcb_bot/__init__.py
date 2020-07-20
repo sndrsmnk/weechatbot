@@ -41,7 +41,7 @@ class WeeChatBot:
             'bot_uniqueid':  ''.join(random.sample('abcdefghijklmnopqrstuvwxyzABCFEFGHIJKLMNOPQRSTUVWXYZ1234567890', 8)),
             'bot_ownermask': '',
 
-            'bot_trigger_re': '^\.',
+            'bot_trigger_re': '^[!\.]',
 
             # This regexp must return the command the 'arguments' via (grou)(ping)
             'bot_command_re': '([-a-zA-Z0-9]+)(?:\s(.*)|$)',
@@ -123,6 +123,11 @@ class WeeChatBot:
         event['target_username'] = event['server'] + '.' + event['nick']
         event['target_channel'] = event['server'] + '.' +  event['channel']
         event['command'] = event['command_args'] = event['trigger'] = ''
+        event['nickmask'] = event['host']
+        res = self.re.match("^.*!(.*)", event['host'])
+        event['hostmask' ] = res.group(1)
+        del event['host']
+
         # Remove clutter
         for key in ['pos_arguments', 'pos_channel', 'pos_command', 'pos_text']:
             event.pop(key, None)
@@ -170,7 +175,7 @@ class WeeChatBot:
                 break
 
         # Fetch the event originator's user info
-        event['user_info'] = self.db_get_userinfo_by_userhost(event['host'])
+        event['user_info'] = self.db_get_userinfo_by_userhost(event['hostmask'])
         self.event = event
 
         # Log the event!
@@ -297,11 +302,7 @@ class WeeChatBot:
                         dlog("Found channel '%s' in server '%s'" % (channel, irc_server_name))
                     self.weechat.infolist_free(servers)
                     return weechat.WEECHAT_RC_OK
-                else:
-                    dlog("Could not find '%s' buffer in any irc_server." % channel)
-                    dlog("UDP message from [%s]:%s to '%s.%s': '%s'" % (host, port, server, channel, message))
-                    self.weechat.infolist_free(servers)
-                    return self.weechat.WEECHAT_RC_ERROR
+            dlog("Could not find '%s' buffer in any irc_server." % (channel))
         else: 
             target = server + '.' + channel
             udp_output_buffer = self.weechat.buffer_search('irc', '(?i)'+target) # (?i) case insensitive
@@ -440,9 +441,9 @@ class WeeChatBot:
             if host == '':
                 self.say("Sorry, try that again?")
                 return self.weechat.WEECHAT_RC_OK
-            tuserhost = '%s!%s' % (nick, host)
+            tuserhost = host
         self.weechat.infolist_free(infolist)
-        return self.db_get_userinfo_by_userhost(tuserhost)
+        return self.db_get_userinfo_by_userhost(tuserhost.lower())
 
 
     def db_get_userinfo_by_userhost(self, host):
@@ -569,7 +570,7 @@ class WeeChatBot:
     def perms(self, want_perms):
         if not want_perms: # module has no perms
             return True
-        if self.state['bot_ownermask'] == self.event['host']: # owner, always
+        if self.state['bot_ownermask'] == self.event['nickmask']: # owner, always
             return True
         if not self.event['user_info']: # unrecognized user
             return False

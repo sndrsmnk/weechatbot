@@ -8,10 +8,10 @@ def config(wcb):
 
 
 def run(wcb, event):
-    if wcb.state['bot_ownermask'] != '' and wcb.state['bot_ownermask'] != event['host']:
+    if wcb.state['bot_ownermask'] != '' and wcb.state['bot_ownermask'] != event['nickmask']:
         return wcb.reply("no you're not.")
 
-    if wcb.state['bot_ownermask'] != '' and wcb.state['bot_ownermask'] == event['host']:
+    if wcb.state['bot_ownermask'] != '' and wcb.state['bot_ownermask'] == event['nickmask']:
         return wcb.reply("yes you are!")
 
     if event['command_args'] != wcb.state['bot_uniqueid']:
@@ -46,7 +46,7 @@ def run(wcb, event):
     cur.close()
     db.close()
 
-    wcb.state['bot_ownermask'] = event['host']
+    wcb.state['bot_ownermask'] = event['nickmask']
     wcb.load_all_modules()
     wcb.save_bot_configuration()
     return wcb.say("Hi! You are now my owner!")

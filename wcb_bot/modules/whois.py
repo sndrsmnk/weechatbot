@@ -39,7 +39,6 @@ def run(wcb, event):
         if channel in uibh['permissions']:
             ret += "and '%s' perms (%s)" % (event['channel'], ", ".join(uibh['permissions'][channel]))
 
-    ret += "."
     wcb.say(ret)
     ret = ""
 

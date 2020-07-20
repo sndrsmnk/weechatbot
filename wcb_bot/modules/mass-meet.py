@@ -9,6 +9,8 @@ def config(wcb):
 
 def run(wcb, event):
     new = merged = recognized = 0
+    db = wcb.db_connect()
+    cur = db.cursor()
 
     # Find users on channel
     infolist = wcb.weechat.infolist_get('irc_nick', '', '%s,%s' % (event['server'], event['channel']))
@@ -21,16 +23,17 @@ def run(wcb, event):
             wcb.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
             wcb.say('OOPS: WeeChat stale data. Try again!')
             return wcb.weechat.WEECHAT_RC_OK
-        tuserhost = '%s!%s' %(nick, host)
+        tuserhost = host
 
         user_info_by_hostmask = wcb.db_get_userinfo_by_userhost(tuserhost)
-        if 'username' in user_info_by_hostmask:
+        if user_info_by_hostmask and 'username' in user_info_by_hostmask:
             recognized += 1
             continue
 
         # XXX Wat als pietje op freenode een andere pietje is dan die op ircnet. :O
+        wcb.say("%s" % nick)
         user_info_by_username = wcb.db_get_userinfo_by_username(nick)
-        if 'username' in user_info_by_username:
+        if user_info_by_username and 'username' in user_info_by_username:
             sql = "INSERT INTO ib_hostmasks (users_id, hostmask) VALUES (%s, %s)"
             cur.execute(sql, (user_info_by_username['id'], tuserhost))
             db.commit()
@@ -38,7 +41,6 @@ def run(wcb, event):
             continue
 
         new += 1
-        
         sql = "INSERT INTO wcb_users (username) VALUES (%s) RETURNING (id)"
         cur.execute(sql, (nick.lower(),))
         res = cur.fetchone()

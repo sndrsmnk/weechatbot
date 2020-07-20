@@ -17,7 +17,12 @@ def run(wcb, event):
     fdb = sqlite3.connect(fdb_file)
 
     cur = fdb.cursor()
-    sql = "CREATE TABLE IF NOT EXISTS fipo (date VARCHAR(8) PRIMARY KEY, channel TEXT, username TEXT, UNIQUE(date, channel))"
+    sql = """CREATE TABLE IF NOT EXISTS fipo (
+                date VARCHAR(8),
+                channel TEXT,
+                username TEXT,
+                UNIQUE(date, channel)
+            )"""
     cur.execute(sql)
     fdb.commit()
 
@@ -76,7 +81,7 @@ def run(wcb, event):
         sql_arr = []
         sql = "SELECT date, username FROM fipo"
         if not wcb.state['bot_shared_knowledge']:
-            sql_arr.append(event['channel]'])
+            sql_arr.append(event['channel'])
             sql += " WHERE channel = ?"
         sql += " ORDER BY date ASC"
         cur.execute(sql, sql_arr)

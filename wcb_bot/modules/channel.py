@@ -10,19 +10,19 @@ def config(wcb):
 def run(wcb, event):
     if event['signal'] == 'irc_in2_INVITE':
         chan = event['text']
-        wcb.mlog("Joining channel '%s' on invite from '%s'" % (chan, event['host']))
+        wcb.mlog("Joining channel '%s' on invite from '%s'" % (chan, event['nickmask']))
         wcb.weechat.command(event['weechat_buffer'], '/join -server %s %s' % (event['server'], chan))
 
     if event['command'] == 'join':
         chan = event['command_args']
-        wcb.mlog("Joining channel '%s' on command from '%s'" % (chan, event['host']))
+        wcb.mlog("Joining channel '%s' on command from '%s'" % (chan, event['nickmask']))
         wcb.weechat.command(event['weechat_buffer'], '/join -server %s %s' % (event['server'], chan))
 
     if event['command'] == 'part':
         chan = event['command_args']
         if not chan or chan == '':
             chan = event['channel']
-        wcb.mlog("Leaving channel '%s' on command from '%s'" % (chan, event['host']))
+        wcb.mlog("Leaving channel '%s' on command from '%s'" % (chan, event['nickmask']))
         wcb.weechat.command(event['weechat_buffer'], '/part %s' % (chan))
    
     # See if autojoin.py by 'xt' is loaded, if so, deal with that.
