@@ -30,7 +30,6 @@ $ ln -sf ~/.weechat/python/wcb.py ~/.weechat/python/autoload/wcb.py
    * `/join #yourChannel`
    * `/autojoin --run`
  * Join IRC, claim the bot, use !help, **read the source** and remember that i didn't write this for you, i wrote this for me. ;)
-   * Type `!owner <botUniqueID>` from your client. The bot should respond and 'activate'.
  * I would advise not to run other plugins with this bot, they may clash.
  * You might want to disable Weechat's flood protection features if you plan to use the UDP listener a lot.
 
