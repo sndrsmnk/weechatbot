@@ -598,6 +598,6 @@ class WeeChatBot:
                 self.weechat.command(self.event['weechat_buffer'], '/who ' + self.event['channel'])
                 self.say('OOPS: WeeChat stale data. Try again!')
                 return self.weechat.WEECHAT_RC_OK
-            tuserhost = '%s!%s' %(nick, host)
+            tuserhost = host
         self.weechat.infolist_free(infolist)
         return tuserhost

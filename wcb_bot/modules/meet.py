@@ -15,11 +15,10 @@ def run(wcb, event):
     if tnick == event['bot_nick']:
         return wcb.reply("i know who i am.")
 
-    tuserhost = wcb.get_userhost_by_ircnick(tnick)
-
-    db_user_info = wcb.db_get_userinfo_by_userhost(tuserhost)
+    tuserhost = wcn.get_userhost_by_ircnick(tnick)
+    db_user_info = wcb.db_get_userinfo_by_ircnick(tnick)
     if db_user_info != None:
-        return wcb.reply("an existing user named '%s' was found matching the host mask '%s'." % (db_user_info['username'], tuserhost))
+        return wcb.reply("an existing user named '%s' was found matching the host mask for '%s'." % (db_user_info['username'], tnick))
 
     db = wcb.db_connect()
     cur = db.cursor()
