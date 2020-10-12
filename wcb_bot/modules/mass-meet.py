@@ -51,7 +51,7 @@ def run(wcb, event):
         sql = "INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (%s, %s)"
         cur.execute(sql, (userid, tuserhost.lower()))
         sql = "INSERT INTO wcb_perms (users_id, permission) VALUES (%s, 'user')"
-        cur.execute(sql, (tuserid,))
+        cur.execute(sql, (userid,))
         db.commit()
 
     rtxt = "done: %d new, %d merged and %d recognized." % (new, merged, recognized)
