@@ -30,8 +30,7 @@ def run(wcb, event):
             recognized += 1
             continue
 
-        # XXX Wat als pietje op freenode een andere pietje is dan die op ircnet. :O
-        wcb.say("%s" % nick)
+        # XXX This currently assumes Pietje on IRCNet is the same Pietje as on Freenode, for example. 
         user_info_by_username = wcb.db_get_userinfo_by_username(nick)
         if user_info_by_username and 'username' in user_info_by_username:
             sql = "INSERT INTO ib_hostmasks (users_id, hostmask) VALUES (%s, %s)"
