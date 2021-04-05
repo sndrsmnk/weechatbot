@@ -12,6 +12,7 @@ import psycopg2
 import traceback
 import importlib.util
 import psycopg2.extras
+from datetime import datetime
 
 
 def dlog(message):
@@ -37,13 +38,14 @@ class WeeChatBot:
             'bot_modules':       '%s/modules' % bot_base,
             'bot_extra_modules': '%s/extra_modules' % bot_base,
             'bot_config':        '%s/wcb_config.json' % bot_base,
+            'bot_alarms':        '%s/wcb_alarms.json' % bot_base,
 
             'bot_uniqueid':  ''.join(random.sample('abcdefghijklmnopqrstuvwxyzABCFEFGHIJKLMNOPQRSTUVWXYZ1234567890', 8)),
             'bot_ownermask': '',
 
             'bot_trigger_re': '^[!\.]',
 
-            # This regexp must return the command the 'arguments' via (grou)(ping)
+            # This regexp must return the command and the 'arguments' via (grou)(ping)
             'bot_command_re': '([-a-zA-Z0-9]+)(?:\s(.*)|$)',
 
             # By default stuff like quotes, karma and infoitems are kept separate per channel.
@@ -75,7 +77,7 @@ class WeeChatBot:
                     dlog("")
 
         if os.path.exists(self.state['bot_config']):
-            self.load_bot_configuration()
+            self.state = self.load_obj_from_json(self.state['bot_config'])
         else:
             dlog("No configuration file was found. First startup?")
 
@@ -100,7 +102,7 @@ class WeeChatBot:
 
         self.setup_udp_listener()
 
-        self.save_bot_configuration()
+        self.save_obj_as_json(self.state, self.state['bot_config'])
 
         weechat.hook_signal("*,irc_in2_privmsg", "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_join",    "shim_wcb_handle_event",     "")
@@ -109,6 +111,12 @@ class WeeChatBot:
         weechat.hook_signal("*,irc_in_topic",    "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_topic",   "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_invite",  "shim_wcb_handle_event",     "")
+
+        self.alarms = self.load_obj_from_json(self.state['bot_alarms'])
+        if not isinstance(self.alarms, list):
+            self.alarms = []
+
+        weechat.hook_timer(60 * 1000, 0, 0, "shim_wcb_handle_timer_event", "")
 
         dlog("\nWeeChatBot initialization complete!")
 
@@ -216,6 +224,41 @@ class WeeChatBot:
         return self.weechat.WEECHAT_RC_OK
 
 
+    def wcb_handle_timer_event(self, data, remaining_calls):
+        cur_dt = datetime.now()
+        new_alarms = []
+        do_save = 0
+
+        for alarm_dict in self.alarms:
+            if alarm_dict['alarm_when'] > cur_dt.timestamp():
+                new_alarms.append(alarm_dict)
+                continue
+
+            servername, targetname = alarm_dict['alarm_where'].split('.')
+            servers = self.weechat.infolist_get("irc_server", "", "")
+            while self.weechat.infolist_next(servers):
+                this_server = self.weechat.infolist_string(servers, 'name')
+                if servername != this_server:
+                    continue
+                obuffer = self.weechat.infolist_pointer(servers, 'buffer')
+            self.weechat.infolist_free(servers)
+
+            if not obuffer:
+                dlog("Alarm '%s' for '%s' in '%s': lookup for '%s' yielded no buffer." %
+                    (alarm_dict['alarm_text'], alarm_dict['alarm_who'], alarm_dict['alarm_where'], servername))
+                return self.weechat.WEECHAT_RC_OK
+
+            do_save = 1
+            msg = "%s, time for your alarm: %s" % (alarm_dict['alarm_who'], alarm_dict['alarm_text'])
+            self.weechat.command(obuffer, "/msg %s %s" % (targetname, msg))
+            dlog("Sent alarm '%s' for '%s'(%s) in '%s' at '%s'!" % (alarm_dict['alarm_text'], alarm_dict['alarm_who'], targetname, alarm_dict['alarm_where'], servername))
+
+        self.alarms = new_alarms
+        if do_save:
+            self.save_obj_as_json(self.alarms, self.state['bot_alarms'])
+        return self.weechat.WEECHAT_RC_OK
+
+
     def wcb_handle_buffer_input(self, data, buffer, input_data):
         self.weechat.prnt(buffer, "Your input was: %s" % input_data)
         return self.weechat.WEECHAT_RC_OK
@@ -224,7 +267,7 @@ class WeeChatBot:
     def wcb_unload(self):
         if self.udp_socket_open == True:
             self.udp_socket.close()
-        self.save_bot_configuration()
+        self.save_obj_as_json(self.state, self.state['bot_config'])
         return self.weechat.WEECHAT_RC_OK
 
 
@@ -317,27 +360,24 @@ class WeeChatBot:
 
 
     ''' Functions pertaining to configuration files '''
-    def save_bot_configuration(self):
+    def save_obj_as_json(self, object, dstfile):
         try:
-            output = open(self.state['bot_config'], 'w')
+            output = open(dstfile, 'w')
         except Exception as e:
-            return dlog("Can't write configuration file '%s': %s" % (self.state['bot_config'], e))
-        output.write(json.dumps(self.state, sort_keys=True, indent=4))
+            return dlog("Can't write file '%s': %s" % (dstfile, e))
+        output.write(json.dumps(object, sort_keys=True, indent=4))
         output.close()
+        return True
 
-        return dlog("Configuration file was saved.")
 
-
-    def load_bot_configuration(self):
+    def load_obj_from_json(self, srcfile):
         try:
-            input = open(self.state['bot_config'], 'r')
+            input = open(srcfile, 'r')
         except Exception as e:
-            return dlog("Can't read configuration file '%s': %s" % (self.state['bot_config'], e))
-
-        self.state = json.load(input)
+            return dlog("Can't read file '%s': %s" % (srcfile, e))
+        object = json.load(input)
         input.close()
-        return dlog("Configuration file was loaded.")
-
+        return object
 
 
     ''' Module loading, unloading, reloading '''
