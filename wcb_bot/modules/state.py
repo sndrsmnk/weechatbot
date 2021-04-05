@@ -9,7 +9,8 @@ def config(wcb):
 
 def run(wcb, event):
     if event['command'] == 'save':
-        wcb.save_bot_configuration()
+        wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
+        wcb.save_obj_as_json(wcb.alarms, wcb.state['bot_alarms'])
         return wcb.say("Bot configuration saved!")
 
 
@@ -32,7 +33,7 @@ def run(wcb, event):
             if ov:
                 ret += " (old value: '%s')" % ov
             wcb.say("%s" % ret)
-            return wcb.save_bot_configuration()
+            return wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
         return wcb.say("Could not discern key, value from arguments: '%s'" % event['command_args'])
 
 
@@ -49,7 +50,7 @@ def run(wcb, event):
         if k in wcb.state:
             ov = wcb.state[k]
             del wcb.state[k]
-            wcb.save_bot_configuration()
+            wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
             return wcb.say("Key '%s' was removed! Value was: '%s'" % (k, ov))
         else:
             return wcb.say("Key '%s' does not exist." % k)

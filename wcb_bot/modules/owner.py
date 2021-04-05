@@ -48,5 +48,5 @@ def run(wcb, event):
 
     wcb.state['bot_ownermask'] = event['nickmask']
     wcb.load_all_modules()
-    wcb.save_bot_configuration()
+    wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
     return wcb.say("Hi! You are now my owner!")
