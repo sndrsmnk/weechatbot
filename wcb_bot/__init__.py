@@ -234,7 +234,13 @@ class WeeChatBot:
                 new_alarms.append(alarm_dict)
                 continue
 
-            servername, targetname = alarm_dict['alarm_where'].split('.')
+            res = re.match('^([^\.]+)\.(.*)', alarm_dict['alarm_where'])
+            if not res:
+                dlog("Alarm: where '%s' did not match regexp." % alarm_dict['alarm_where'])
+                continue
+            servername = res.group(1)
+            targetname = res.group(2)
+
             servers = self.weechat.infolist_get("irc_server", "", "")
             while self.weechat.infolist_next(servers):
                 this_server = self.weechat.infolist_string(servers, 'name')
