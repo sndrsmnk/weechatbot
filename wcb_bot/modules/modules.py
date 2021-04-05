@@ -23,8 +23,3 @@ def run(wcb, event):
     if event['command'] == 'unload':
         wcb.unload_module(event['command_args'])
         return wcb.say("Unloaded module '%s'" % event['command_args'])
-
-    if event['command'] == 'avail':
-        rtxt = 'Modules loaded: %s' % (', '.join(sorted(self.modules)))
-        wcb.say(rtxt)
-        return wcb.weechat.WEECHAT_RC_OK
