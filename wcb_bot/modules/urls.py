@@ -25,7 +25,8 @@ def run(wcb, event):
         urls[channel] = {'url': '', 'info': '', 'updated': 0}
 
     # See if url can be matched.
-    res = wcb.re.search("((?:https?\:\/\/)?[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
+    #res = wcb.re.search("((?:https?\:\/\/)?[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
+    res = wcb.re.search("(?i)(https?\:\/\/[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
     if res:
         url = res.group(1)
         if '..' in url:
@@ -79,7 +80,6 @@ def fetchURLinfo(wcb, url):
     c.setopt(c.URL, url)
     c.setopt(c.FOLLOWLOCATION, 1)
     c.setopt(c.MAXREDIRS, 5)
-    c.setopt(c.MAXFILESIZE, 65536)
     c.setopt(c.USERAGENT, 'Mozilla')
     c.setopt(c.WRITEFUNCTION, b.write)
     c.setopt(c.HEADERFUNCTION, __pycurl_headerfn)
