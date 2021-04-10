@@ -116,7 +116,7 @@ class WeeChatBot:
         if not isinstance(self.alarms, list):
             self.alarms = []
 
-        weechat.hook_timer(60 * 1000, 0, 0, "shim_wcb_handle_timer_event", "")
+        weechat.hook_timer(60 * 1000, 0, 0, "shim_wcb_handle_timer_signal", "")
 
         dlog("\nWeeChatBot initialization complete!")
 
@@ -185,7 +185,10 @@ class WeeChatBot:
         # Fetch the event originator's user info
         event['user_info'] = self.db_get_userinfo_by_userhost(event['hostmask'])
         self.event = event
+        return self.let_module_handle_event(event)
 
+
+    def let_module_handle_event(self, event, handle_event_silently=False):
         # Log the event!
         if self.state['debug_event']:
             pp = pprint.PrettyPrinter(indent=4)
@@ -205,64 +208,57 @@ class WeeChatBot:
                 # Check permissions and run if allowed.
                 if not self.perms(self.modules[module]['permissions']):
                     dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
-                else:
-                    dlog("Module '%s' handles event by '%s' method." % (module, event['trigger']))
-                    try:
-                        self.modules[module]['object'].run(self, event)
-                    except Exception as err:
-                        exc_type, exc_value, exc_traceback = sys.exc_info()
-                        while 1:
-                            if not exc_traceback.tb_next:
-                                break
-                            exc_traceback = exc_traceback.tb_next
-                        frame = exc_traceback.tb_frame
-                        mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
-                        rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
-                        if event['weechat_buffer']:
-                            self.say(rtxt)
-                        return dlog(rtxt)
-        return self.weechat.WEECHAT_RC_OK
-
-
-    def wcb_handle_timer_event(self, data, remaining_calls):
-        cur_dt = datetime.now()
-        new_alarms = []
-        do_save = 0
-
-        for alarm_dict in self.alarms:
-            if alarm_dict['alarm_when'] > cur_dt.timestamp():
-                new_alarms.append(alarm_dict)
-                continue
-
-            res = re.match('^([^\.]+)\.(.*)', alarm_dict['alarm_where'])
-            if not res:
-                dlog("Alarm: where '%s' did not match regexp." % alarm_dict['alarm_where'])
-                continue
-            servername = res.group(1)
-            targetname = res.group(2)
-
-            servers = self.weechat.infolist_get("irc_server", "", "")
-            while self.weechat.infolist_next(servers):
-                this_server = self.weechat.infolist_string(servers, 'name')
-                if servername != this_server:
                     continue
-                obuffer = self.weechat.infolist_pointer(servers, 'buffer')
-            self.weechat.infolist_free(servers)
 
-            if not obuffer:
-                dlog("Alarm '%s' for '%s' in '%s': lookup for '%s' yielded no buffer." %
-                    (alarm_dict['alarm_text'], alarm_dict['alarm_who'], alarm_dict['alarm_where'], servername))
-                return self.weechat.WEECHAT_RC_OK
+                if not handle_event_silently or self.state['debug_event'] is True:
+                    dlog("Module '%s' handles '%s' by '%s' method." % (module, event['signal'], event['trigger']))
 
-            do_save = 1
-            msg = "%s, time for your alarm: %s" % (alarm_dict['alarm_who'], alarm_dict['alarm_text'])
-            self.weechat.command(obuffer, "/msg %s %s" % (targetname, msg))
-            dlog("Sent alarm '%s' for '%s'(%s) in '%s' at '%s'!" % (alarm_dict['alarm_text'], alarm_dict['alarm_who'], targetname, alarm_dict['alarm_where'], servername))
-
-        self.alarms = new_alarms
-        if do_save:
-            self.save_obj_as_json(self.alarms, self.state['bot_alarms'])
+                try:
+                    self.modules[module]['object'].run(self, event)
+                except Exception as err:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    while 1:
+                        if not exc_traceback.tb_next:
+                            break
+                        exc_traceback = exc_traceback.tb_next
+                    frame = exc_traceback.tb_frame
+                    mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
+                    rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
+                    if event['weechat_buffer']:
+                        self.say(rtxt)
+                    return dlog(rtxt)
         return self.weechat.WEECHAT_RC_OK
+
+
+    def wcb_handle_timer_signal(self, data, remaining_calls):
+        timer_signal = {
+            'data': data,
+            'remaining_calls': remaining_calls,
+
+            'arguments': '',
+            'bot_is_op': False,
+            'bot_nick': '',
+            'channel': '',
+            'command': '',
+            'command_args': '',
+            'hostmask': 'weechatbot@self',
+            'message_without_tags': ':WeeChatBot!self@host ALARMTIMER '
+                                    ':Alarm timer event',
+            'nick': 'WeeChatBot',
+            'nickmask': 'WeeChatBot!self@host',
+            'server': '',
+            'signal': 'timer_signal',
+            'tags': '',
+            'target_channel': '',
+            'target_username': '',
+            'text': '',
+            'trigger': '',
+            'user': '',
+            'user_info': None,
+            'weechat_buffer': None
+        }
+        self.event = timer_signal
+        return self.let_module_handle_event(timer_signal, handle_event_silently=True)
 
 
     def wcb_handle_buffer_input(self, data, buffer, input_data):
@@ -617,6 +613,8 @@ class WeeChatBot:
         if not want_perms: # module has no perms
             return True
         if self.state['bot_ownermask'] == self.event['nickmask']: # owner, always
+            return True
+        if self.event['nickmask'] == 'WeeChatBot!self@host': # internal event, always
             return True
         if not self.event['user_info']: # unrecognized user
             return False

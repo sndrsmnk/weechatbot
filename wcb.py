@@ -21,8 +21,8 @@ def shim_wcb_handle_buffer_input(data, buffer, input_data):
 def shim_wcb_handle_event(data, signal, signal_data):
     return bot.wcb_handle_event(data, signal, signal_data)
 
-def shim_wcb_handle_timer_event(data, remaining_calls):
-    return bot.wcb_handle_timer_event(data, remaining_calls)
+def shim_wcb_handle_timer_signal(data, remaining_calls):
+    return bot.wcb_handle_timer_signal(data, remaining_calls)
 
 def shim_wcb_unload():
     return bot.wcb_unload()

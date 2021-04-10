@@ -5,8 +5,8 @@ import re
 
 def config(wcb):
     return {
-        'events': [],
-        'commands': ['alarm', 'alarm-del', 'alarm-list'],
+        'events': ['timer_signal'],
+        'commands': ['alarm', 'alarms', 'alarm-list', 'alarm-del'],
         'permissions': ['user'],
         'help': "Sets alarms",
     }
@@ -123,9 +123,58 @@ def alarm_del(wcb, event):
     wcb.say('Alarm removed: "%s" at %s' % (wcb.alarms[alarm_del_idx]['alarm_text'], alarm_dt))
     del(wcb.alarms[alarm_del_idx])
     wcb.save_obj_as_json(wcb.alarms, wcb.state['bot_alarms'])
+    return alarm_list(wcb,event)
+
+
+def alarm_timer_event(wcb, event):
+    """ This function can make no assumption on the event data. It is empty for the most part. """
+    """ All message routing, if any, must be done with manual lookups of buffers and raw commands. """
+    cur_dt = datetime.now()
+    new_alarms = []
+    do_save = 0
+
+    for alarm_dict in wcb.alarms:
+        if alarm_dict['alarm_when'] > cur_dt.timestamp():
+            new_alarms.append(alarm_dict)
+            continue
+
+        res = re.match('^([^\.]+)\.(.*)', alarm_dict['alarm_where'])
+        if not res:
+            wcb.mlog("Alarm: where '%s' did not match regexp." % alarm_dict['alarm_where'])
+            continue
+        servername = res.group(1)
+        targetname = res.group(2)
+
+        obuffer = False
+        servers = wcb.weechat.infolist_get("irc_server", "", "")
+        while wcb.weechat.infolist_next(servers):
+            this_server = wcb.weechat.infolist_string(servers, 'name')
+            if servername != this_server:
+                continue
+            obuffer = wcb.weechat.infolist_pointer(servers, 'buffer')
+        wcb.weechat.infolist_free(servers)
+
+        if not obuffer:
+            wcb.mlog("Alarm '%s' for '%s' in '%s': lookup for '%s' yielded no buffer." %
+                (alarm_dict['alarm_text'], alarm_dict['alarm_who'], alarm_dict['alarm_where'], servername))
+            return wcb.weechat.WEECHAT_RC_OK
+
+        do_save = 1
+        msg = "%s, time for your alarm: %s" % (alarm_dict['alarm_who'], alarm_dict['alarm_text'])
+        wcb.weechat.command(obuffer, "/msg %s %s" % (targetname, msg))
+        wcb.mlog("Sent alarm '%s' for '%s'(%s) in '%s' at '%s'!" %
+            (alarm_dict['alarm_text'], alarm_dict['alarm_who'], targetname, alarm_dict['alarm_where'], servername))
+
+    wcb.alarms = new_alarms
+    if do_save:
+        wcb.save_obj_as_json(wcb.alarms, wcb.state['bot_alarms'])
+    return wcb.weechat.WEECHAT_RC_OK
 
 
 def run(wcb, event):
+    if event['signal'] == 'timer_signal':
+        return alarm_timer_event(wcb, event)
+
     if event['command'] == 'alarm-del':
         return alarm_del(wcb, event)
 
