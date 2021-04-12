@@ -55,6 +55,12 @@ def run(wcb, event):
         # Fetch the row id and karma value.
         karma_id = res[0]
         karma_value = res[1]
+        if wcb.state['bot_shared_knowledge']:
+            sql = "SELECT SUM(karma) AS karma FROM wcb_karma WHERE item = %s GROUP BY item"
+            cur.execute(sql, (item,))
+            db.commit()
+            res = cur.fetchone()
+            karma_value = res[0]
 
         # Store the 'who' info
         sql = "INSERT INTO wcb_karma_who (karma_id, users_id, direction, amount) VALUES (%s, %s, %s, 1) ON CONFLICT (karma_id, users_id, direction) DO UPDATE SET amount = wcb_karma_who.amount + 1"
@@ -76,11 +82,13 @@ def run(wcb, event):
         item = event['command_args'].lower()
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
-        sql = "SELECT * FROM wcb_karma WHERE item = %s"
         sql_arr = [item]
-        if not wcb.state['bot_shared_knowledge']:
-            sql += " AND channel = %s"
+        if wcb.state['bot_shared_knowledge']:
+            sql = "SELECT SUM(karma) AS karma, item FROM wcb_karma WHERE item = %s GROUP BY item"
+        else:
+            sql = "SELECT * FROM wcb_karma WHERE item = %s AND channel = %s"
             sql_arr.append(event['channel'])
+
         cur.execute(sql, sql_arr)
         res = cur.fetchone()
         if not res:
