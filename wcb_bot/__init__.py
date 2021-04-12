@@ -318,6 +318,10 @@ class WeeChatBot:
         if password != self.state['udp_listen_pass']:
             return dlog("UDP message from [%s]:%s had bad password: '%s'" % (host, port, data))
 
+        # Make passing message to weechat.command() "safer" by replacing leading '/'-chars :)
+        if message[0] == '/':
+            message[0] = '_' + message[1:]
+
         # Check if channel is indeed the channel, or the server name.
         # If it smells like a server name, strip of the next word from
         # str_data to use as the new channel name.
