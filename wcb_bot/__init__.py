@@ -320,7 +320,7 @@ class WeeChatBot:
 
         # Make passing message to weechat.command() "safer" by replacing leading '/'-chars :)
         if message[0] == '/':
-            message[0] = '_' + message[1:]
+            message = '_' + message[1:]
 
         # Check if channel is indeed the channel, or the server name.
         # If it smells like a server name, strip of the next word from
