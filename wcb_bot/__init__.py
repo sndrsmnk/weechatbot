@@ -156,6 +156,7 @@ class WeeChatBot:
             reply_buffer_name = event['target_username']
 
         # Find the actual buffer, not all signals are associated with a single buffer, so we skip them.
+        event['weechat_buffer'] = False
         if event['signal'] not in ['irc_in2_QUIT', 'irc_in2_INVITE']:
             reply_buffer = self.weechat.buffer_search("irc", '(?i)' + reply_buffer_name) # (?i) case insensitive
             if not reply_buffer:
@@ -167,9 +168,11 @@ class WeeChatBot:
             self.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
 
         # Find our name on event's channel
-        bot_nick = self.weechat.buffer_get_string(event['weechat_buffer'], 'localvar_nick')
-        event['bot_nick'] = bot_nick
-        self.weechat.infolist_free(bot_nick)
+        event['bot_nick'] = 'no_event_buffer'
+        if event['weechat_buffer']:
+            bot_nick = self.weechat.buffer_get_string(event['weechat_buffer'], 'localvar_nick')
+            event['bot_nick'] = bot_nick
+            self.weechat.infolist_free(bot_nick)
 
         # Check if bot is op on event's channel.
         event['bot_is_op'] = False
