@@ -2,7 +2,7 @@ def config(wcb):
     return {
         'events': [],
         'commands': ['load', 'reload', 'unload', 'avail'],
-        'permissions': ['modules'],
+        'permissions': ['user', 'modules'],
         'help': "Provides load, reload, unload functionality for modules",
     }
 
@@ -12,6 +12,9 @@ def run(wcb, event):
         mlist = ", ".join(sorted(wcb.modules.keys()))
         return wcb.say("Modules loaded: %s" % mlist)
 
+    # Commands below require owner / modules permissions.
+    if not perms('modules'):
+        return wcb.say("I can't let you do that, Dave.")
 
     # Commands below require param to be set.        
     if event['command_args'] == '':
