@@ -61,7 +61,7 @@ def alarm_add(wcb, event):
         dd = res.group(1)
         mm = res.group(2)
         yyyy = res.group(3)
-        hh:mm = res.group(4)
+        hhmm = res.group(4)
         alarm_text = res.group(5)
         dstr = "%s-%s-%s %s" % (mm, dd, yyyy, hhmm)
         alarm_date_obj = parse(dstr)
