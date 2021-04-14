@@ -13,7 +13,7 @@ def run(wcb, event):
         return wcb.say("Modules loaded: %s" % mlist)
 
     # Commands below require owner / modules permissions.
-    if not perms('modules'):
+    if not wcb.perms('modules'):
         return wcb.say("I can't let you do that, Dave.")
 
     # Commands below require param to be set.        

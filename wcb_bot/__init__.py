@@ -321,6 +321,9 @@ class WeeChatBot:
         if password != self.state['udp_listen_pass']:
             return dlog("UDP message from [%s]:%s had bad password: '%s'" % (host, port, data))
 
+        if not message:
+            return dlog('UDP message from [%s]:%s had empty message!' % (host, port))
+
         # Make passing message to weechat.command() "safer" by replacing leading '/'-chars :)
         if message[0] == '/':
             message = '_' + message[1:]
