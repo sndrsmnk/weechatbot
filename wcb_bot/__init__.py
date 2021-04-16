@@ -237,7 +237,7 @@ class WeeChatBot:
                     return dlog(rtxt)
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
-        if not event_command_handled and event['command'] != '':
+        if not event_command_handled and " = " not in event['text'] and event['command'] != '':
             event['text'] += "?"
             event['trigger'] = 'event'
             self.modules['infoitem']['object'].run(self, event)
