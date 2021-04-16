@@ -22,7 +22,7 @@ def run(wcb, event):
             db = wcb.db_connect()
             cur = db.cursor()
             sql = "DELETE FROM wcb_infoitems WHERE item = %s AND channel = %s AND value LIKE %s"
-            cur.execute(sql, (db_k, event['channel'], '%'+v+'%'))
+            cur.execute(sql, (db_k, event['channel'], '%%'+v+'%%'))
             db.commit()
             return wcb.reply("entry removed.")
         else:
