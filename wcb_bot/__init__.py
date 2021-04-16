@@ -199,7 +199,7 @@ class WeeChatBot:
             dlog("Event:\n%s" % pp.pformat(event))
 
         # Look for modules to handle this event.
-        event_handled = 0
+        event_command_handled = 0
         for module in list(self.modules):
             event['trigger'] = ''
 
@@ -215,7 +215,8 @@ class WeeChatBot:
                     dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
                     continue
 
-                event_handled = 1
+                if event['trigger'] == 'command':
+                    event_command_handled = 1
 
                 if not handle_event_silently or self.state['debug_event'] is True:
                     dlog("Module '%s' handles '%s' by '%s' method." % (module, event['signal'], event['trigger']))
@@ -236,7 +237,7 @@ class WeeChatBot:
                     return dlog(rtxt)
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
-        if not event_handled and event['command'] != '':
+        if not event_command_handled and event['command'] != '':
             event['command'] += "?"
             self.modules['infoitem']['object'].run(self, event)
 
