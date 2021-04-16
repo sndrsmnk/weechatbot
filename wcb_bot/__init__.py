@@ -95,7 +95,7 @@ class WeeChatBot:
             dlog("after claiming the other modules will be auto loaded.");
             dlog("");
             self.load_module("owner");
-        
+
         # Compile configurable regexps for matching in event handlers
         self.re_trigger = re.compile(self.state['bot_trigger_re'])
         self.re_command = re.compile(self.state['bot_trigger_re'] + self.state['bot_command_re'])
@@ -199,6 +199,7 @@ class WeeChatBot:
             dlog("Event:\n%s" % pp.pformat(event))
 
         # Look for modules to handle this event.
+        event_handled = 0
         for module in list(self.modules):
             event['trigger'] = ''
 
@@ -213,6 +214,8 @@ class WeeChatBot:
                 if not self.perms(self.modules[module]['permissions']):
                     dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
                     continue
+
+                event_handled = 1
 
                 if not handle_event_silently or self.state['debug_event'] is True:
                     dlog("Module '%s' handles '%s' by '%s' method." % (module, event['signal'], event['trigger']))
@@ -231,6 +234,12 @@ class WeeChatBot:
                     if event['weechat_buffer']:
                         self.say(rtxt)
                     return dlog(rtxt)
+
+        # Try event again as infoitem lookup (!foo?) when command and not handled
+        if not event_handled and event['command'] != '':
+            event['command'] += "?"
+            self.modules['infoitem']['object'].run(self, event)
+
         return self.weechat.WEECHAT_RC_OK
 
 
@@ -359,7 +368,7 @@ class WeeChatBot:
                     self.weechat.infolist_free(servers)
                     return weechat.WEECHAT_RC_OK
             dlog("Could not find '%s' buffer in any irc_server." % (channel))
-        else: 
+        else:
             target = server + '.' + channel
             udp_output_buffer = self.weechat.buffer_search('irc', '(?i)'+target) # (?i) case insensitive
             if udp_output_buffer:
