@@ -145,6 +145,7 @@ class WeeChatBot:
         re_command_result = self.re_command.search(event['text'])
         if re_trigger_result and re_command_result:
             event['command'] = re_command_result.group(1)
+            event['command'] = event['command'].lower()
             if re_command_result.group(2):
                 event['command_args'] = re.sub('^\s+', '', re.sub('\s+$', '', re_command_result.group(2)))
 
