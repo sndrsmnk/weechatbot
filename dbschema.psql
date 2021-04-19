@@ -10,7 +10,8 @@ DROP TYPE wcb_karma_direction;
 
 CREATE TABLE wcb_users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(64) UNIQUE NOT NULL
+    username VARCHAR(64) UNIQUE NOT NULL,
+    dob DATE
 -- add more info?
 );
 
