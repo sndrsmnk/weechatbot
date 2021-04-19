@@ -90,10 +90,21 @@ def show_birthdays(wcb, event):
     dt = datetime.datetime.now()
     dtt = dt.timetuple()
     nowmonth, nowday = (dtt[1], dtt[2])
-
-    # BDs this month
     db = wcb.db_connect()
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+
+    # BDs today!
+    sql = """SELECT username, dob
+            FROM wcb_users
+            WHERE EXTRACT (MONTH FROM dob) = %s
+            AND EXTRACT (DAY FROM dob) = %s"""
+    cur.execute(sql, (nowmonth, nowday))
+    res = cur.fetchall()
+    if res:
+        for val in res:
+            wcb.say("It's %s's birthday today!!" % val['username'])
+
+    # BDs this month
     sql = """SELECT username, dob
             FROM wcb_users
             WHERE EXTRACT (MONTH FROM dob) = %s"""
