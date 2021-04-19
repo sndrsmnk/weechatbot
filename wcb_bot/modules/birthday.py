@@ -58,9 +58,11 @@ def show_age(wcb, event):
     arg = event['command_args']
     if arg and arg != '':
         target_hostmask = wcb.get_userhost_by_ircnick(arg)
+        if not target_hostmask:
+            return wcb.reply("Can't find nick '%s' on this channel?" % (arg))
         target_info = wcb.db_get_userinfo_by_userhost(target_hostmask)
         if not target_info or not target_info['id']:
-            return wcb.reply("Can't find nick '%s' on this channel?" % (arg))
+            return wcb.reply("Nick '%s' does not seem to match a registered user. Try whois / merge?" % (arg))
         lookup_uid = target_info['id']
 
     sql = """SELECT
