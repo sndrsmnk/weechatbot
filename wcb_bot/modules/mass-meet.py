@@ -33,7 +33,7 @@ def run(wcb, event):
         # XXX This currently assumes Pietje on IRCNet is the same Pietje as on Freenode, for example. 
         user_info_by_username = wcb.db_get_userinfo_by_username(nick)
         if user_info_by_username and 'username' in user_info_by_username:
-            sql = "INSERT INTO ib_hostmasks (users_id, hostmask) VALUES (%s, %s)"
+            sql = "INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (%s, %s)"
             cur.execute(sql, (user_info_by_username['id'], tuserhost))
             db.commit()
             merged += 1
