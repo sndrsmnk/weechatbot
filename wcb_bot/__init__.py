@@ -237,7 +237,14 @@ class WeeChatBot:
                     return dlog(rtxt)
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
-        if not event_command_handled and event['command'] != '' and event['command'] != 'forget' and " = " not in event['text']:
+        # This is fugly. Modules should return some kind of return code indicating
+        # wether events should propagate or be considered dealth with.
+        if not event_command_handled \
+            and event['command'] != '' \
+            and event['command'] != 'forget' \
+            and " = " not in event['text'] \
+            and not event['text'].endswith('++') \
+            and not event['text'].endswith('--'):
                 event['text'] += "?"
                 event['trigger'] = 'event'
                 self.modules['infoitem']['object'].run(self, event)
