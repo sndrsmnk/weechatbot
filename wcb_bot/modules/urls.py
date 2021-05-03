@@ -30,7 +30,7 @@ def run(wcb, event):
     if res:
         url = res.group(1)
         if '..' in url:
-            return # #lazy fix for regexp catching "bla..." as url
+            return wcb.signal_cont # #lazy fix for regexp catching "bla..." as url
         if urls[channel]['url'] != url:
             urls[channel]['url'] = url
             urls[channel]['info'] = {}
@@ -38,12 +38,13 @@ def run(wcb, event):
 
     # Exit early if event does not match the trigger regexp.
     if not wcb.re.match(wcb.state['bot_trigger_re'], event['text']):
-        return
+        return wcb.signal_cont
+
     # Strip off bot_trigger_re from text
     event_text = wcb.re.sub(wcb.state['bot_trigger_re'], '', event['text'])
     # Exit early if not our trigger.
     if not event_text.startswith('@'):
-        return
+        return wcb.signal_cont
         
     rtxt_postfix = ''
     last_url = urls[channel]['url']
@@ -57,7 +58,8 @@ def run(wcb, event):
         rtxt_postfix = "(cached,ttl:%ds)" % ttl
     if '-f' in event_text: rtxt_postfix += "(url: %s)" % last_url
 
-    return wcb.say("URL info: %s || (%s, %s) %s" % (urls[channel]['info']['title'], urls[channel]['info']['content-type'], urls[channel]['info']['encoding'], rtxt_postfix))
+    wcb.say("URL info: %s || (%s, %s) %s" % (urls[channel]['info']['title'], urls[channel]['info']['content-type'], urls[channel]['info']['encoding'], rtxt_postfix))
+    return wcb.signal_stop
 
 
 def __pycurl_headerfn(header_line):
