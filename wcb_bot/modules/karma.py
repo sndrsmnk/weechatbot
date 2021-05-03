@@ -21,7 +21,7 @@ def config(wcb):
 def run(wcb, event):
     # Exit early if event does not match the trigger regexp.
     if not wcb.re.match(wcb.state['bot_trigger_re'], event['text']):
-        return
+        return wcb.signal_cont
     # Strip off bot_trigger_re from text
     event_text = wcb.re.sub(wcb.state['bot_trigger_re'], '', event['text'])
 
@@ -75,7 +75,8 @@ def run(wcb, event):
 
         rtxt = "karma for '%s' is now '%s'" % (item, karma_value)
         if reason: rtxt += " - %s" % reason
-        return wcb.reply(rtxt)
+        wcb.reply(rtxt)
+        return wcb.signal_stop
 
 
     if event['command'] == 'karma':

@@ -45,7 +45,8 @@ def run(wcb, event):
             sql = "INSERT INTO wcb_infoitems (users_id, item, value, channel) VALUES (%s, %s, %s, %s)"
             cur.execute(sql, (event['user_info']['id'], db_k, v, event['channel']))
             db.commit()
-            return wcb.reply("entry added.")
+            wcb.reply("entry added.")
+            return wcb.signal_stop
 
         # See if it is an attempt to get the definition of a thing?
         re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?$')
@@ -74,4 +75,5 @@ def run(wcb, event):
             retstr = " .. ".join(defstr)
             if retstr == '':
                 return wcb.say('%s is not defined.' % pub_k)
-            return wcb.say("%s is %s" % (pub_k, retstr))
+            wcb.say("%s is %s" % (pub_k, retstr))
+            return wcb.signal_stop

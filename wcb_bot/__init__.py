@@ -33,6 +33,10 @@ class WeeChatBot:
         bot_base = os.environ['HOME'] + '/.weechat/python/wcb_bot'
         self.udp_socket_open = False
         self.modules = {}
+
+        self.signal_cont = 0
+        self.signal_stop = 1
+
         self.state = {
             'bot_base':          bot_base,
             'bot_modules':       '%s/modules' % bot_base,
@@ -221,8 +225,11 @@ class WeeChatBot:
                 if not handle_event_silently or self.state['debug_event'] is True:
                     dlog("Module '%s' handles '%s' by '%s' method." % (module, event['signal'], event['trigger']))
 
+                module_return_state = self.signal_cont
                 try:
-                    self.modules[module]['object'].run(self, event)
+                    module_return_state = self.modules[module]['object'].run(self, event)
+                    if not module_return_state:
+                        module_return_state = self.signal_cont
                 except Exception as err:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
                     while 1:
@@ -236,18 +243,14 @@ class WeeChatBot:
                         self.say(rtxt)
                     return dlog(rtxt)
 
+                if module_return_state == self.signal_stop:
+                    return self.weechat.WEECHAT_RC_OK
+
         # Try event again as infoitem lookup (!foo?) when command and not handled
-        # This is fugly. Modules should return some kind of return code indicating
-        # wether events should propagate or be considered dealth with.
-        if not event_command_handled \
-            and event['command'] != '' \
-            and event['command'] != 'forget' \
-            and " = " not in event['text'] \
-            and not event['text'].endswith('++') \
-            and not event['text'].endswith('--'):
-                event['text'] += "?"
-                event['trigger'] = 'event'
-                self.modules['infoitem']['object'].run(self, event)
+        if not event_command_handled:
+            event['text'] += "?"
+            event['trigger'] = 'event'
+            self.modules['infoitem']['object'].run(self, event)
 
         return self.weechat.WEECHAT_RC_OK
 
