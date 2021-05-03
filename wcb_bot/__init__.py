@@ -247,7 +247,9 @@ class WeeChatBot:
                     return self.weechat.WEECHAT_RC_OK
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
-        if not event_command_handled:
+        # unless someone types !!!! for example.
+        text_has_double_trigger_char = self.re_trigger.search(event['text'][1:])
+        if not text_has_double_trigger_char and not event_command_handled:
             event['text'] += "?"
             event['trigger'] = 'event'
             self.modules['infoitem']['object'].run(self, event)
