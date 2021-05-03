@@ -72,8 +72,11 @@ def run(wcb, event):
             defstr = []
             for val in res:
                 defstr.append(val[0])
+
             retstr = " .. ".join(defstr)
             if retstr == '':
-                return wcb.say('%s is not defined.' % pub_k)
+                wcb.say('%s is not defined.' % pub_k)
+                return wcb.signal_stop
+
             wcb.say("%s is %s" % (pub_k, retstr))
             return wcb.signal_stop
