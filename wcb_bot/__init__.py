@@ -252,6 +252,7 @@ class WeeChatBot:
         if not text_has_double_trigger_char and not event_command_handled:
             event['text'] += "?"
             event['trigger'] = 'event'
+            event['infoitem_auto_lookup_quiet'] = True
             self.modules['infoitem']['object'].run(self, event)
 
         return self.weechat.WEECHAT_RC_OK
@@ -382,17 +383,17 @@ class WeeChatBot:
                         dlog("Found channel '%s' in server '%s'" % (channel, irc_server_name))
                     self.weechat.infolist_free(servers)
                     return weechat.WEECHAT_RC_OK
-            dlog("Could not find '%s' buffer in any irc_server." % (channel))
-        else:
-            target = server + '.' + channel
-            udp_output_buffer = self.weechat.buffer_search('irc', '(?i)'+target) # (?i) case insensitive
-            if udp_output_buffer:
-                self.weechat.command(udp_output_buffer, message)
-                return weechat.WEECHAT_RC_OK
-            else:
-                dlog("Could not find '%s' buffer in '%s' irc_server." % (channel, server))
-                dlog("UDP message from [%s]:%s to '%s.%s': '%s'" % (host, port, server, channel, message))
-                return self.weechat.WEECHAT_RC_ERROR
+            return dlog("Could not find '%s' buffer in any irc_server." % (channel))
+
+        target = server + '.' + channel
+        udp_output_buffer = self.weechat.buffer_search('irc', '(?i)'+target) # (?i) case insensitive
+        if udp_output_buffer:
+            self.weechat.command(udp_output_buffer, message)
+            return weechat.WEECHAT_RC_OK
+
+        dlog("Could not find '%s' buffer in '%s' irc_server." % (channel, server))
+        dlog("UDP message from [%s]:%s to '%s.%s': '%s'" % (host, port, server, channel, message))
+        return self.weechat.WEECHAT_RC_ERROR
 
 
 

@@ -75,7 +75,8 @@ def run(wcb, event):
 
             retstr = " .. ".join(defstr)
             if retstr == '':
-                wcb.say('%s is not defined.' % pub_k)
+                if 'infoitem_auto_lookup_quiet' not in event:
+                    wcb.say('%s is not defined.' % pub_k)
                 return wcb.signal_stop
 
             wcb.say("%s is %s" % (pub_k, retstr))
