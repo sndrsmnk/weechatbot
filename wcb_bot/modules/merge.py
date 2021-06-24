@@ -33,7 +33,7 @@ def run(wcb, event):
         return wcb.say("Hostmask '%s' for nick '%s' matches registered user '%s'." % (merge_userhost, merge_irc_nick, tmp['username']))
 
     sql = "INSERT INTO wcb_hostmasks (users_id, hostmask) VALUES (%s, %s)"
-    cur.execute(sql, (db_userinfo[0], merge_userhost))
+    cur.execute(sql, (db_userinfo[0], merge_userhost.lower()))
 
     db.commit()
 

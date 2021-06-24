@@ -137,7 +137,7 @@ class WeeChatBot:
         event['command'] = event['command_args'] = event['trigger'] = ''
         event['nickmask'] = event['host']
         res = self.re.match("^.*!(.*)", event['host'])
-        event['hostmask' ] = res.group(1)
+        event['hostmask' ] = res.group(1).lower()
         del event['host']
 
         # Remove clutter
@@ -680,4 +680,4 @@ class WeeChatBot:
                 return self.weechat.WEECHAT_RC_OK
             tuserhost = host
         self.weechat.infolist_free(infolist)
-        return tuserhost
+        return tuserhost.lower()
