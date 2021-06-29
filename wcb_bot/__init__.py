@@ -646,6 +646,8 @@ class WeeChatBot:
 
     def perm(self, want_perms): return self.perms(want_perms)
     def perms(self, want_perms):
+        if not isinstance(want_perms, list):
+            want_perms = [want_perms] # make list if not a list
         if not want_perms: # module has no perms
             return True
         if self.state['bot_ownermask'] == self.event['nickmask']: # owner, always
