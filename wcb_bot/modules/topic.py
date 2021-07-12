@@ -25,8 +25,8 @@ def run(wcb, event):
     if event['signal'] == 'irc_in_TOPIC':
         if not topic:
             return wcb.mlog("Lookup of topic on '%s' yielded no value.")
-        wcb.mlog('insignal "%s"' % topic)
         wcb.state['previous_topic'][event['channel']] = topic
+        return wcb.signal_cont
 
 
     if wcb.re.match("^(?:pt|previous-topic)$", event['command']):
@@ -46,7 +46,7 @@ def run(wcb, event):
             return wcb.reply("topic-set what, exactly?")
         wcb.state['previous_topic'][event['channel']] = topic
         wcb.weechat.command(event['weechat_buffer'], '/topic ' + new_topic)
-        return
+        return wcb.signal_cont
 
 
     if event['command'] == 'topic-add':
@@ -56,7 +56,7 @@ def run(wcb, event):
         new_topic = topic + ' | ' + add_topic
         wcb.state['previous_topic'][event['channel']] = topic
         wcb.weechat.command(event['weechat_buffer'], '/topic ' + new_topic)
-        return
+        return wcb.signal_cont
 
 
     if event['command'] == 'topic-del':
@@ -73,4 +73,4 @@ def run(wcb, event):
         new_topic = ' | '.join(topic_elems)
         wcb.state['previous_topic'][event['channel']] = topic
         wcb.weechat.command(event['weechat_buffer'], '/topic ' + new_topic)
-        return
+        return wcb.signal_cont
