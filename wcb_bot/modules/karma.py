@@ -139,27 +139,27 @@ def run(wcb, event):
         item = event['command_args'].lower()
         if item == '': return wcb.reply('please specify a karma item to lookup.')
 
-        if wcb.state['bot_shared_knowledge']:
-            sql = "SELECT *, SUM(karma) AS karma FROM wcb_karma WHERE item = %s"
-            sql_arr = [item]
-        else:
-            sql = "SELECT * FROM wcb_karma WHERE item = %s AND channel = %s"
-            sql_arr = [item, event['channel']]
+        sql = "SELECT id FROM wcb_karma WHERE item = %s"
+        sql_arr = [item]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_arr.append(event['channel'])
 
         cur.execute(sql, sql_arr)
-        karma_item = cur.fetchone()
+        karma_item = cur.fetchall()
         if not karma_item:
             return wcb.reply("'%s' has no karma." % item)
+        karma_item_ids = []
+        for idnumber in karma_item:
+            karma_item_ids.append(idnumber['id'])
 
-        # XXX undefined results with shared_knowledge enabled and item is defined in multiple channels
-        #     current assumption is item,channel is unique.
         sql = """SELECT u.username, kwho.amount, k.item
                FROM wcb_users u, wcb_karma_who kwho, wcb_karma k
                WHERE u.id = kwho.users_id
                AND kwho.direction = %s
                AND k.id = kwho.karma_id
-               AND k.id = %s"""
-        cur.execute(sql, (direction, karma_item['id'],))
+               AND k.id IN %s"""
+        cur.execute(sql, (direction, tuple(karma_item_ids),))
         karma_who_rows = cur.fetchall()
         who_arr = []
         row_count = len(karma_who_rows)
