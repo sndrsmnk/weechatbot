@@ -23,9 +23,9 @@ def run(wcb, event):
     # Environmental sanity
     if channel not in urls:
         urls[channel] = {'url': '', 'info': '', 'updated': 0}
+    auto_urls_trigger = False
 
     # See if url can be matched.
-    #res = wcb.re.search("((?:https?\:\/\/)?[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
     res = wcb.re.search("(?i)(https?\:\/\/[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
     if res:
         url = res.group(1)
@@ -35,17 +35,19 @@ def run(wcb, event):
             urls[channel]['url'] = url
             urls[channel]['info'] = {}
             urls[channel]['updated'] = 0
-
-    # Exit early if event does not match the trigger regexp.
-    if not wcb.re.match(wcb.state['bot_trigger_re'], event['text']):
-        return wcb.signal_cont
+            auto_urls_trigger = True
 
     # Strip off bot_trigger_re from text
     event_text = wcb.re.sub(wcb.state['bot_trigger_re'], '', event['text'])
-    # Exit early if not our trigger.
-    if not event_text.startswith('@'):
-        return wcb.signal_cont
-        
+
+    if not 'auto_urls_channels' in wcb.state or channel not in wcb.state['auto_urls_channels']:
+        # Exit early if not our trigger.
+        if not event_text.startswith('@'):
+            return wcb.signal_cont
+    else:
+        if auto_urls_trigger != True and not event_text.startswith('@'):
+            return wcb.signal_cont
+
     rtxt_postfix = ''
     last_url = urls[channel]['url']
     last_upd = urls[channel]['updated']
@@ -56,9 +58,13 @@ def run(wcb, event):
         urls[channel]['updated'] = int(time.time())
     else:
         rtxt_postfix = "(cached,ttl:%ds)" % ttl
-    if '-f' in event_text: rtxt_postfix += "(url: %s)" % last_url
 
-    wcb.say("URL info: %s || (%s, %s) %s" % (urls[channel]['info']['title'], urls[channel]['info']['content-type'], urls[channel]['info']['encoding'], rtxt_postfix))
+    if 'text/html' not in urls[channel]['info']['content-type']:
+        rtxt_postfix += "|| (%s, %s) " % (urls[channel]['info']['content-type'], urls[channel]['info']['encoding'])
+    if '-f' in event_text:
+        rtxt_postfix += "(url: %s)" % last_url
+
+    wcb.say("URL info: %s %s" % (urls[channel]['info']['title'], rtxt_postfix))
     return wcb.signal_stop
 
 
@@ -94,10 +100,8 @@ def fetchURLinfo(wcb, url):
         res = wcb.re.search('charset=(\S+)', content_type)
         if res:
             encoding = res.group(1)
-        wcb.mlog("Found content-type charset '%s'" % encoding)
     if encoding is None:
         encoding = 'utf8'
-        wcb.mlog("Assuming encoding is '%s'" % encoding)
     elif encoding == 'binary':
         return {'title': 'binary data', 'encoding': encoding, 'content-type': content_type}
 
