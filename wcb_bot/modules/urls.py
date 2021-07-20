@@ -20,10 +20,12 @@ def config(wcb):
 def run(wcb, event):
     channel = event['channel']
     urls = wcb.state['urls']
+
     # Environmental sanity
     if channel not in urls:
         urls[channel] = {'url': '', 'info': '', 'updated': 0}
     auto_urls_trigger = False
+    manual_urls_trigger = False
 
     # See if url can be matched.
     res = wcb.re.search("(?i)(https?\:\/\/[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
@@ -37,21 +39,19 @@ def run(wcb, event):
             urls[channel]['updated'] = 0
             auto_urls_trigger = True
 
-    # Strip off bot_trigger_re from text
-    event_text = wcb.re.sub(wcb.state['bot_trigger_re'], '', event['text'])
+    if 'auto_urls_channels' not in wcb.state or channel not in wcb.state['auto_urls_channels']:
+        auto_urls_trigger = False
 
-    if not 'auto_urls_channels' in wcb.state or channel not in wcb.state['auto_urls_channels']:
-        # Exit early if not our trigger.
-        if not event_text.startswith('@'):
-            return wcb.signal_cont
-    else:
-        if auto_urls_trigger != True and not event_text.startswith('@'):
-            return wcb.signal_cont
+    if wcb.re.match(wcb.state['bot_trigger_re'] + '@', event['text']):
+        manual_urls_trigger = True
+
+    if not manual_urls_trigger and not auto_urls_trigger:
+        return wcb.signal_cont
 
     rtxt_postfix = ''
     last_url = urls[channel]['url']
     last_upd = urls[channel]['updated']
-    if '-f' in event_text: last_upd = 0
+    if ' -f' in event['text']: last_upd = 0
     ttl = 300 - (int(time.time()) - int(last_upd))
     if ttl < 0:
         urls[channel]['info'] = fetchURLinfo(wcb, last_url)
@@ -61,7 +61,7 @@ def run(wcb, event):
 
     if 'text/html' not in urls[channel]['info']['content-type']:
         rtxt_postfix += "|| (%s, %s) " % (urls[channel]['info']['content-type'], urls[channel]['info']['encoding'])
-    if '-f' in event_text:
+    if ' -f' in event['text']:
         rtxt_postfix += "(url: %s)" % last_url
 
     wcb.say("URL info: %s %s" % (urls[channel]['info']['title'], rtxt_postfix))
