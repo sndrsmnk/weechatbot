@@ -34,10 +34,6 @@ def run(wcb, event):
         if '..' in url:
             return wcb.signal_cont # #lazy fix for regexp catching "bla..." as url
 
-        if wcb.re.search('(?i)(jpe?g|png|mp3|ogg|wav|iso|webm|webp)$', url):
-            wcb.mlog("Ignoring URL '%s' by extension." % url)
-            return wcb.signal_cont
-
         if urls[channel]['url'] != url:
             urls[channel]['url'] = url
             urls[channel]['info'] = {}
@@ -59,8 +55,11 @@ def run(wcb, event):
     if ' -f' in event['text']: last_upd = 0
     ttl = 300 - (int(time.time()) - int(last_upd))
     if ttl < 0:
-        urls[channel]['info'] = fetchURLinfo(wcb, last_url)
-        urls[channel]['updated'] = int(time.time())
+        try:
+            urls[channel]['info'] = fetchURLinfo(wcb, last_url)
+            urls[channel]['updated'] = int(time.time())
+        except Exception as e:
+            return wcb.say("URL info error: '%s'" % e)
     else:
         rtxt_postfix = "(cached,ttl:%ds)" % ttl
 
@@ -92,6 +91,8 @@ def fetchURLinfo(wcb, url):
     c = pycurl.Curl() 
     c.setopt(c.URL, url)
     c.setopt(c.FOLLOWLOCATION, 1)
+    c.setopt(c.CONNECTTIMEOUT, 2)
+    c.setopt(c.TIMEOUT, 2)
     c.setopt(c.MAXREDIRS, 5)
     c.setopt(c.USERAGENT, 'Mozilla')
     c.setopt(c.WRITEFUNCTION, b.write)
