@@ -33,6 +33,11 @@ def run(wcb, event):
         url = res.group(1)
         if '..' in url:
             return wcb.signal_cont # #lazy fix for regexp catching "bla..." as url
+
+        if wcb.re.match(r'(jpe?g|png|mp3|ogg|wav|iso|webm|webp)$', url):
+            wcb.mlog("Skipping URL '%s' by extension." % url)
+            return wcb.signal_cont
+
         if urls[channel]['url'] != url:
             urls[channel]['url'] = url
             urls[channel]['info'] = {}
