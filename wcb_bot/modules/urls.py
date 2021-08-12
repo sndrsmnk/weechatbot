@@ -34,8 +34,8 @@ def run(wcb, event):
         if '..' in url:
             return wcb.signal_cont # #lazy fix for regexp catching "bla..." as url
 
-        if wcb.re.match(r'(jpe?g|png|mp3|ogg|wav|iso|webm|webp)$', url):
-            wcb.mlog("Skipping URL '%s' by extension." % url)
+        if wcb.re.search('(?i)(jpe?g|png|mp3|ogg|wav|iso|webm|webp)$', url):
+            wcb.mlog("Ignoring URL '%s' by extension." % url)
             return wcb.signal_cont
 
         if urls[channel]['url'] != url:
