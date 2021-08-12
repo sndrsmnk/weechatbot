@@ -11,7 +11,7 @@ def config(wcb):
             'why-karma-up', 'why-up', 'karma-why-up', 'karma-whyup',
             'why-karma-down', 'why-down', 'karma-why-down', 'karma-whydown',
             'goodness', 'badness',
-            'fans', 'haters'
+            'lovers', 'fans', 'haters'
             ],
         'permissions': ['user', 'set-karma'],
         'help': "Keeps track of user karma"
@@ -194,7 +194,7 @@ def run(wcb, event):
         return wcb.say(rtxt)
 
 
-    res = wcb.re.match("^(fans|haters)", event['command'])
+    res = wcb.re.match("^(lovers|fans|haters)", event['command'])
     if res:
         direction = res.group(1)
         item = event['command_args'].lower()
