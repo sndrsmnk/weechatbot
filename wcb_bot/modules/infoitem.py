@@ -10,7 +10,8 @@ def config(wcb):
 def run(wcb, event):
     if event['command'] == 'forget':
         if not wcb.perms('forget'):
-            return wcb.reply("you can't do that. Sorry.")
+            wcb.reply("you can't do that. Sorry.")
+            return wcb.signal_stop
             
         re = wcb.re.compile('([^\s]+)\s(.*)')
         res = re.match(event['command_args'])
