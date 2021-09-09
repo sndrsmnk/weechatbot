@@ -22,6 +22,13 @@ def run(wcb, event):
     # Exit early if event does not match the trigger regexp.
     if not wcb.re.match(wcb.state['bot_trigger_re'], event['text']):
         return wcb.signal_cont
+
+    # Lay-zee way to prevent karma from gobbling up infoitem foo
+    # This means you can't "!bla = bla++" things, but hey...
+    re = wcb.state['bot_trigger_re'] + '.+?\s=\s'
+    if wcb.re.match(re, event['text']):
+        return wcb.signal_cont
+
     # Strip off bot_trigger_re from text
     event_text = wcb.re.sub(wcb.state['bot_trigger_re'], '', event['text'])
 
