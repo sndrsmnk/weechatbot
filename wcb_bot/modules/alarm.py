@@ -36,10 +36,10 @@ def alarm_add(wcb, event):
     now_date_obj = datetime.now()
     alarm_date_obj = None
     alarm_text = ''
-    re_hhmm = re.compile(r'^(\d{1,2}:\d{2})\s(.*)')
-    re_ddmmhhmm = re.compile(r'^(\d{1,2})-(\d{1,2})\s(\d{1,2}:\d{2})\s(.*)')
-    re_ddmmyyyyhhmm = re.compile(r'^(\d{1,2})-(\d{1,2})-(\d{4})\s(\d{1,2}:\d{2})\s(.*)')
-    re_yyyymmddhhmm = re.compile(r'^(\d{4})-(\d{1,2})-(\d{1,2})\s(\d{1,2}:\d{2})\s(.*)')
+    re_hhmm = re.compile(r'^(\d{1,2}:\d{2})(?::\d{2})?\s(.*)')
+    re_ddmmhhmm = re.compile(r'^(\d{1,2})-(\d{1,2})\s(\d{1,2}:\d{2})(?::\d{2})?\s(.*)')
+    re_ddmmyyyyhhmm = re.compile(r'^(\d{1,2})-(\d{1,2})-(\d{4})\s(\d{1,2}:\d{2})(?::\d{2})?\s(.*)')
+    re_yyyymmddhhmm = re.compile(r'^(\d{4})-(\d{1,2})-(\d{1,2})\s(\d{1,2}:\d{2})(?::\d{2})?\s(.*)')
 
     res = re.match(re_hhmm, event['command_args'])
     if res:
