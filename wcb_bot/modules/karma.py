@@ -121,7 +121,7 @@ def run(wcb, event):
         cur.execute(sql, sql_arr)
         karma_item = cur.fetchone()
 
-        sql = "SELECT reason FROM wcb_karma_why WHERE karma_id = %s AND direction = %s ORDER BY id DESC"
+        sql = "SELECT reason FROM wcb_karma_why WHERE karma_id = %s AND direction = %s"
         sql_arr = [karma_item['id'], direction]
         if not wcb.state['bot_shared_knowledge']:
             sql += " AND channel = %s"
