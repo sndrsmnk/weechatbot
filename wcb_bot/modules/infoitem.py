@@ -15,19 +15,25 @@ def run(wcb, event):
             
         re = wcb.re.compile('([^\s]+)\s(.*)')
         res = re.match(event['command_args'])
-        if res:
-            pub_k = res.group(1)
-            db_k = res.group(1).lower()
-            v = res.group(2)
+        if not res:
+            wcb.reply("command unclear. Try '!forget <key> <[partof]value>'. Will remove all matching entries.")
+            return wcb.signal_stop
 
-            db = wcb.db_connect()
-            cur = db.cursor()
-            sql = "DELETE FROM wcb_infoitems WHERE item = %s AND channel = %s AND value LIKE %s"
-            cur.execute(sql, (db_k, event['channel'], '%%'+v+'%%'))
-            db.commit()
-            return wcb.reply("entry removed.")
-        else:
-            return wcb.reply("command unclear. Try '!forget <key> <[partof]value>'. Will remove all matching entries.")
+        pub_k = res.group(1)
+        db_k = res.group(1).lower()
+        v = res.group(2)
+
+        db = wcb.db_connect()
+        cur = db.cursor()
+        sql = "DELETE FROM wcb_infoitems WHERE item = %s AND value LIKE %s"
+        sql_args = [db_k, '%%'+v+'%%']
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_args.append(event['channel'])
+        cur.execute(sql, sql_args)
+        db.commit()
+        wcb.reply("entry removed.")
+        return wcb.signal_stop # prevent handling both the 'trigger' and the 'command' event.
 
 
     if event['trigger'] == 'event':
