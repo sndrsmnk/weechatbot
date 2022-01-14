@@ -36,55 +36,95 @@ def run(wcb, event):
         return wcb.signal_stop # prevent handling both the 'trigger' and the 'command' event.
 
 
-    if event['trigger'] == 'event':
-        txt = event['text']
+    # Process 'non command' triggers here
+    txt = event['text']
 
-        # See if it is an attempt to define a thing?
-        re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?) = (.*)')
-        res = re.match(txt)
-        if res:
-            pub_k = res.group(1)
-            db_k = res.group(1).lower()
-            v = res.group(2)
-            
-            db = wcb.db_connect()
-            cur = db.cursor()
-            sql = "INSERT INTO wcb_infoitems (users_id, item, value, channel) VALUES (%s, %s, %s, %s)"
-            cur.execute(sql, (event['user_info']['id'], db_k, v, event['channel']))
-            db.commit()
-            wcb.reply("entry added.")
+
+    # See if it is an attempt to define a thing?
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?) = (.*)')
+    res = re.match(txt)
+    if res:
+        pub_k = res.group(1)
+        db_k = res.group(1).lower()
+        v = res.group(2)
+
+        db = wcb.db_connect()
+        cur = db.cursor()
+        sql = "INSERT INTO wcb_infoitems (users_id, item, value, channel) VALUES (%s, %s, %s, %s)"
+        cur.execute(sql, (event['user_info']['id'], db_k, v, event['channel']))
+        db.commit()
+        wcb.reply("entry added.")
+        return wcb.signal_stop
+
+
+    # see if it is an attempt to grep through the defitions of a thing?
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?\s+\|\s+grep\s+(.*)')
+    res = re.match(txt)
+    if res:
+        pub_k = res.group(1)
+        db_k = res.group(1).lower()
+        grep_v = res.group(2)
+        if not grep_v:
+            return wcb.say("No value to grep for")
+
+        db = wcb.db_connect()
+        cur = db.cursor()
+
+        sql = "SELECT value FROM wcb_infoitems WHERE item = %s AND value LIKE %s"
+        sql_args = [db_k, '%'+grep_v+'%']
+
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_args.append(event['channel'])
+
+        sql += " ORDER BY insert_time ASC"
+
+        cur.execute(sql, sql_args)
+        res = cur.fetchall()
+        defstr = []
+        for val in res:
+            defstr.append(val[0])
+
+        retstr = " .. ".join(defstr)
+        if retstr == '':
+            if 'infoitem_auto_lookup_quiet' not in event:
+                wcb.say('grep for "%s" in "%s" yields no results or "%s" is not defined.' % (grep_v, pub_k, pub_k))
             return wcb.signal_stop
 
-        # See if it is an attempt to get the definition of a thing?
-        re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?$')
-        res = re.match(txt)
-        if res:
-            pub_k = res.group(1)
-            db_k = res.group(1).lower()
-            
-            db = wcb.db_connect()
-            cur = db.cursor()
+        wcb.say("matches: %s" % (grep_v, pub_k, retstr))
+        return wcb.signal_stop
 
-            sql = "SELECT value FROM wcb_infoitems WHERE item = %s"
-            sql_args = [db_k]
 
-            if not wcb.state['bot_shared_knowledge']:
-                sql += " AND channel = %s"
-                sql_args.append(event['channel'])
+    # See if it is an attempt to get the definition of a thing?
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?$')
+    res = re.match(txt)
+    if res:
+        pub_k = res.group(1)
+        db_k = res.group(1).lower()
 
-            sql += " ORDER BY insert_time ASC"
+        db = wcb.db_connect()
+        cur = db.cursor()
 
-            cur.execute(sql, sql_args)
-            res = cur.fetchall()
-            defstr = []
-            for val in res:
-                defstr.append(val[0])
+        sql = "SELECT value FROM wcb_infoitems WHERE item = %s"
+        sql_args = [db_k]
 
-            retstr = " .. ".join(defstr)
-            if retstr == '':
-                if 'infoitem_auto_lookup_quiet' not in event:
-                    wcb.say('%s is not defined.' % pub_k)
-                return wcb.signal_stop
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_args.append(event['channel'])
 
-            wcb.say("%s is %s" % (pub_k, retstr))
+        sql += " ORDER BY insert_time ASC"
+
+        cur.execute(sql, sql_args)
+        res = cur.fetchall()
+        defstr = []
+        for val in res:
+            defstr.append(val[0])
+
+        retstr = " .. ".join(defstr)
+        if retstr == '':
+            if 'infoitem_auto_lookup_quiet' not in event:
+                wcb.say('%s is not defined.' % pub_k)
             return wcb.signal_stop
+
+        wcb.say("%s is %s" % (pub_k, retstr))
+        return wcb.signal_stop
