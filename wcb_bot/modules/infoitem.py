@@ -91,7 +91,7 @@ def run(wcb, event):
                 wcb.say('grep for "%s" in "%s" yields no results or "%s" is not defined.' % (grep_v, pub_k, pub_k))
             return wcb.signal_stop
 
-        wcb.say("matches: %s" % (grep_v, pub_k, retstr))
+        wcb.say("matches: %s" % retstr)
         return wcb.signal_stop
 
 
