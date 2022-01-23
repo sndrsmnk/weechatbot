@@ -53,4 +53,4 @@ def run(wcb, event):
                 wcb.state['chan-perm'][channel].remove(permission)
                 counter += 1
         wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
-        return wcb.say("Removed %d permissions from '%s'" % (counter, event['channel']))
+        return wcb.say("Removed %d permissions from '%s'" % (counter, channel))
