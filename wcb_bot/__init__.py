@@ -660,6 +660,8 @@ class WeeChatBot:
             return True
         channel = self.event['channel'].lower()
         for want_perm in want_perms:
+            if 'chan-perm' in self.state and channel in self.state['chan-perm'] and want_perm in self.state['chan-perm'][channel]:
+                return True
             if want_perm in self.event['user_info']['permissions']['global']:
                 return True
             if channel in self.event['user_info']['permissions'] and want_perm in self.event['user_info']['permissions'][channel]:
