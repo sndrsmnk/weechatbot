@@ -168,11 +168,11 @@ class WeeChatBot:
                 dlog("Could not find reply_buffer for event: '%s'" % event)
             event['weechat_buffer'] = reply_buffer
 
-        # If this is a JOIN event, update WeeChat internal state with gratouitous '/WHO' on channel
+        # If this is a JOIN event, update WeeChat internal state with gratouitous '/WHO' on the channel
         if event['signal'] == 'irc_in2_JOIN':
             self.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
 
-        # Find our name on event's channel
+        # Find our name on the event's buffer
         event['bot_nick'] = 'no_event_buffer'
         if event['weechat_buffer']:
             bot_nick = self.weechat.buffer_get_string(event['weechat_buffer'], 'localvar_nick')
@@ -212,44 +212,49 @@ class WeeChatBot:
             elif event['signal'] in self.modules[module]['events']:
                 event['trigger'] = 'event'
 
-            # Found one?
-            if event['trigger']:
-                # Check permissions and run if allowed.
-                if not self.perms(self.modules[module]['permissions']):
-                    dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
-                    continue
+            # This module did not match the IRC event
+            if not event['trigger']:
+                continue
 
-                if event['trigger'] == 'command':
-                    event_command_handled = 1
+            # This code runs when the module 'matches' the IRC event.
+            # Check permissions and run if allowed.
+            if not self.perms(self.modules[module]['permissions']):
+                dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
+                continue
 
-                if not handle_event_silently or self.state['debug_event'] is True:
-                    dlog("Module '%s' handles '%s' by '%s' method." % (module, event['signal'], event['trigger']))
+            # If the IRC event matches a module defined command,
+            # flag for catching infoitem special case in code below.
+            if event['trigger'] == 'command':
+                event_command_handled = 1
 
-                module_return_state = self.signal_cont
-                try:
-                    module_return_state = self.modules[module]['object'].run(self, event)
-                    if not module_return_state:
-                        module_return_state = self.signal_cont
-                except Exception as err:
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
-                    while 1:
-                        if not exc_traceback.tb_next:
-                            break
-                        exc_traceback = exc_traceback.tb_next
-                    frame = exc_traceback.tb_frame
-                    mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
-                    rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
-                    if event['weechat_buffer']:
-                        self.say(rtxt)
-                    return dlog(rtxt)
+            if not handle_event_silently or self.state['debug_event'] is True:
+                dlog("Module '%s' handles '%s' by '%s' method." % (module, event['signal'], event['trigger']))
 
-                if module_return_state == self.signal_stop:
-                    return self.weechat.WEECHAT_RC_OK
+            module_return_state = self.signal_cont
+            try:
+                module_return_state = self.modules[module]['object'].run(self, event)
+                if not module_return_state:
+                    module_return_state = self.signal_cont
+            except Exception as err:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                while 1:
+                    if not exc_traceback.tb_next:
+                        break
+                    exc_traceback = exc_traceback.tb_next
+                frame = exc_traceback.tb_frame
+                mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
+                rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
+                if event['weechat_buffer']:
+                    self.say(rtxt)
+                return dlog(rtxt)
+
+            if module_return_state == self.signal_stop:
+                return self.weechat.WEECHAT_RC_OK
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
         # unless someone types !!!! for example.
         text_has_double_trigger_char = self.re_trigger.search(event['text'][1:])
-        if not text_has_double_trigger_char and not event_command_handled:
+        if 'infoitem' in self.modules and not text_has_double_trigger_char and not event_command_handled:
             event['text'] += "?"
             event['trigger'] = 'event'
             event['infoitem_auto_lookup_quiet'] = True
@@ -290,7 +295,7 @@ class WeeChatBot:
 
 
     def wcb_handle_buffer_input(self, data, buffer, input_data):
-        self.weechat.prnt(buffer, "Your input was: %s" % input_data)
+        self.weechat.prnt(buffer, "Bot control via this buffer hasn't been implemented yet! Your input was: %s" % input_data)
         return self.weechat.WEECHAT_RC_OK
 
 

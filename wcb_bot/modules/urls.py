@@ -34,10 +34,10 @@ def run(wcb, event):
         if '..' in url:
             return wcb.signal_cont # #lazy fix for regexp catching "bla..." as url
 
-        res = wcb.re.search("(?i)music.youtube.com.*v=([-_a-z0-9]{11})", url)
-        if res:
-            ytvid = res.group(1)
-            url = 'https://www.youtube.com/watch?v=' + ytvid
+        # music.youtube.com URLs only give 'Upgrade your browser'-titles in contrast to www.youtube.com urls
+        # silently rewrite
+        if 'music.youtube' in url:
+            url = url.replace('music.youtube', 'www.youtube')
 
         if urls[channel]['url'] != url:
             urls[channel]['url'] = url
