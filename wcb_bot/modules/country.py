@@ -13,10 +13,11 @@ def config(wcb):
 
 def run(wcb, event):
     cc = event['command_args']
-    ccobj = countries.get(cc)
-    if not ccobj:
+    try:
+        ccobj = countries.get(cc)
+    except Exception as e:
         wcb.say(f"It doesn't look like '{cc}' is a country code or number.")
-        return wcb.signal_stop
+        return wcb.signal_Stop
 
     wcb.say(f"Country code {ccobj.alpha2} ({ccobj.alpha3}/{ccobj.numeric}) is {ccobj.name}.")
     return wcb.signal_stop
