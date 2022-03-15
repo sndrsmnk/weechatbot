@@ -110,8 +110,6 @@ def show_birthdays(wcb, event):
             WHERE EXTRACT (MONTH FROM dob) = %s"""
     cur.execute(sql, (nowmonth,))
     res = cur.fetchall()
-    if not res:
-        return wcb.say("Something went wrong. Oops!")
 
     bdays = []
     for val in res:
