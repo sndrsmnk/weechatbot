@@ -3,7 +3,7 @@ WeechatBot
 This is an IRC bot implementation built with Weechat Python scripting.<br/>
 (c) 2020 GPLv2+ - There may be dragons.
 
-You may need some or all of these Ubuntu packages: weechat, python3-psycopg2, python3-pycurl
+You may need some or all of these Ubuntu packages: weechat, python3-psycopg2, python3-pycurl, python3-iso3166
 
 Quick install guide:
 ----
