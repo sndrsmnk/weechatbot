@@ -13,7 +13,7 @@ def run(wcb, event):
     args_arr = args_txt.split(' ')
 
     mode = 'list'
-    if len(args_arr) > 0 and args_txt is not '':
+    if len(args_arr) > 0 and args_txt != '':
         mode = args_arr.pop(0)
 
     channel = wcb.event['channel']
