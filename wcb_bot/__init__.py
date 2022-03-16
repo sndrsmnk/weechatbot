@@ -108,13 +108,19 @@ class WeeChatBot:
 
         self.save_obj_as_json(self.state, self.state['bot_config'])
 
-        weechat.hook_signal("*,irc_in2_privmsg", "shim_wcb_handle_event",     "")
-        weechat.hook_signal("*,irc_in2_join",    "shim_wcb_handle_event",     "")
-        weechat.hook_signal("*,irc_in2_part",    "shim_wcb_handle_event",     "")
-        weechat.hook_signal("*,irc_in2_quit",    "shim_wcb_handle_event",     "")
-        weechat.hook_signal("*,irc_in_topic",    "shim_wcb_handle_event",     "")
-        weechat.hook_signal("*,irc_in2_topic",   "shim_wcb_handle_event",     "")
-        weechat.hook_signal("*,irc_in2_invite",  "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_privmsg",  "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_join",     "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_part",     "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_quit",     "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in_topic",     "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_topic",    "shim_wcb_handle_event",     "")
+        weechat.hook_signal("*,irc_in2_invite",   "shim_wcb_handle_event",     "")
+
+        # reoplist module signal plumbing, only on IRCNet
+        # XXX do we hardcode that ircname 'ircnet' ?
+        #     we nouw also do in the reoplist.py module, so ...
+        weechat.hook_signal("ircnet,irc_in2_344", "shim_wcb_handle_event",     "")
+        weechat.hook_signal("ircnet,irc_in2_345", "shim_wcb_handle_event",     "")
 
         self.alarms = self.load_obj_from_json(self.state['bot_alarms'])
         if not isinstance(self.alarms, list):
@@ -130,6 +136,8 @@ class WeeChatBot:
     def wcb_handle_event(self, data, signal, signal_data):
         event = {}
         event['server'], event['signal'] = signal.split(",")
+        if self.state['debug_event']:
+            dlog("Event: %s" % signal)
         for k, v in self.weechat.info_get_hashtable("irc_message_parse", {"message": signal_data}).items():
             event[k] = v
         event['target_username'] = event['server'] + '.' + event['nick']
@@ -137,7 +145,13 @@ class WeeChatBot:
         event['command'] = event['command_args'] = event['trigger'] = ''
         event['nickmask'] = event['host']
         res = self.re.match("^.*!(.*)", event['host'])
-        event['hostmask' ] = res.group(1).lower()
+        if res:
+            event['hostmask'] = res.group(1).lower()
+        else:
+            # This is an IRCNet 'reop list' event, set the bot as originator for permission reasons.
+            if event['server'] == 'ircnet' and event['signal'] in ['irc_in2_344', 'irc_in2_345']: # XXX perhaps do this for all numeric irc_in2_NNN events?
+                event['hostmask'] = 'self@host'
+                event['nickmask'] = 'WeeChatBot!self@host'
         del event['host']
 
         # Remove clutter
@@ -175,9 +189,20 @@ class WeeChatBot:
         # Find our name on the event's buffer
         event['bot_nick'] = 'no_event_buffer'
         if event['weechat_buffer']:
-            bot_nick = self.weechat.buffer_get_string(event['weechat_buffer'], 'localvar_nick')
-            event['bot_nick'] = bot_nick
-            self.weechat.infolist_free(bot_nick)
+            for t in [('bot_nick', 'localvar_nick'), ('bot_hostmask', 'localvar_host')]:
+                value = self.weechat.buffer_get_string(event['weechat_buffer'], t[1])
+                event[t[0]] = value
+
+            if 'bot_hostmask' in event:
+                event['bot_nickmask'] = event['bot_nick'] + '!' + event['bot_hostmask']
+            else:
+                dlog("Could not find our own nick/host on buffer?")
+                self.debug_event(event)
+                event['bot_nick'] = 'undef'
+                event['bot_hostmask'] = 'undef@undef.undef'
+                event['bot_nickmask'] = 'undef!undef@undef.undef'
+
+            self.weechat.infolist_free(value)
 
         # Check if bot is op on event's channel.
         event['bot_is_op'] = False
@@ -199,8 +224,7 @@ class WeeChatBot:
     def let_module_handle_event(self, event, handle_event_silently=False):
         # Log the event!
         if self.state['debug_event']:
-            pp = pprint.PrettyPrinter(indent=4)
-            dlog("Event:\n%s" % pp.pformat(event))
+            self.debug_event(event)
 
         # Look for modules to handle this event.
         event_command_handled = 0
@@ -623,6 +647,10 @@ class WeeChatBot:
 
 
     ''' Functions useful to modules '''
+    def debug_event(self, event):
+        pp = pprint.PrettyPrinter(indent=4)
+        dlog("Event:\n%s" % pp.pformat(event))
+
     def mlog(self, message):
         caller = inspect.getouterframes(inspect.currentframe(), 2)[1][1]
         caller = caller[:-3]

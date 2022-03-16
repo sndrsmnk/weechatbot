@@ -5,6 +5,8 @@ This is an IRC bot implementation built with Weechat Python scripting.<br/>
 
 You may need some or all of these Ubuntu packages: weechat, python3-psycopg2, python3-pycurl, python3-iso3166
 
+Disclaimer: i have no idea what i'm doing. This could be implemented much more betterer.
+
 Quick install guide:
 ----
  * This needs a PostgreSQL database. Schema is in `$GITHOME/dbschema.psql`.
