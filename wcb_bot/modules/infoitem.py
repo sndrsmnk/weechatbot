@@ -96,7 +96,7 @@ def run(wcb, event):
 
 
     # See if it is an attempt to get the definition of a thing?
-    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?$')
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?\s*$')
     res = re.match(txt)
     if res:
         pub_k = res.group(1)
