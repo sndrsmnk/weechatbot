@@ -127,14 +127,14 @@ def run(wcb, event):
                 winning_streak_usernames.append(username)
 
         if lookup_username:
-            if lookup_username not in fipo_stats:
+            if lookup_username.lower() not in fipo_stats:
                 return wcb.say("%s has not scored any fipo's yet." % lookup_username)
 
             if lookup_username == event['nick']:
                 rtxt = "You "
             else: 
                rtxt = "%s " % lookup_username
-            rtxt += "scored %d fipo's!" % fipo_stats[lookup_username]
+            rtxt += "scored %d fipo's!" % fipo_stats[lookup_username.lower()]
             return wcb.say(rtxt)
         
         wcb.say("Longest streak of %d day(s) by %s" % (winning_streak, ", ".join(winning_streak_usernames)))
