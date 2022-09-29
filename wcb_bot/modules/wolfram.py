@@ -27,10 +27,11 @@ def run(wcb, event):
     converted = False
     args = event['command_args']
     if 'noconv' in args:
-        args = re.sub(r'\s*noconv\s*', '', args)
+        args = re.sub(r'noconv', '', args)
     else:
         converted = True
         args = re.sub(r'([KMGTPEkmgtpe])([bB])', r'\1i\2', args)
+        args = re.sub(r'\s{2,}', ' ', args)
 
     wolfram_url = "https://api.wolframalpha.com/v2/query?format=plaintext&output=JSON&appid=%s&input=%s"
     wolfram_url = wolfram_url % (wcb.state['wolfram_appid'], urllib.parse.quote(args, safe=''))
