@@ -1,39 +1,73 @@
 def config(wcb):
     return {
         'events': ['irc_in2_PRIVMSG'],
-        'commands': [],
+        'commands': ['forget', 'si', 'search-info'],
         'permissions': ['user'],
         'help': "Get and set info items.\nBy default infoitems are kept per channel.\nSet 'bot_shared_knowledge' in config to True to disable."
     }
 
 
+def do_search(wcb, event):
+    search_for = event['command_args']
+
+    db = wcb.db_connect()
+    cur = db.cursor()
+    sql = "SELECT DISTINCT item, insert_time FROM wcb_infoitems WHERE value LIKE %s"
+    sql_args = ['%'+search_for+'%']
+
+    if not wcb.state['bot_shared_knowledge']:
+        sql += " AND channel = %s"
+        sql_args.append(event['channel'])
+
+    sql += " ORDER BY insert_time ASC"
+
+    cur.execute(sql, sql_args)
+    res = cur.fetchall()
+    matching_items_array = []
+    for val in res:
+        matching_items_array.append(val[0])
+
+    if not len(matching_items_array):
+        return wcb.say("No matching info items found for your search string.")
+
+    matching_items_str = " .. ".join(matching_items_array)
+    return wcb.say("These info items match your search string: %s" % matching_items_str)
+
+
+def do_forget(wcb, event):
+    if not wcb.perms('forget'):
+        wcb.reply("you can't do that. Sorry.")
+        return wcb.signal_stop
+        
+    re = wcb.re.compile('([^\s]+)\s(.*)')
+    res = re.match(event['command_args'])
+    if not res:
+        wcb.reply("command unclear. Try '!forget <key> <[partof]value>'. Will remove all matching entries.")
+        return wcb.signal_stop
+
+    pub_k = res.group(1)
+    db_k = res.group(1).lower()
+    v = res.group(2)
+
+    db = wcb.db_connect()
+    cur = db.cursor()
+    sql = "DELETE FROM wcb_infoitems WHERE item = %s AND value LIKE %s"
+    sql_args = [db_k, '%%'+v+'%%']
+    if not wcb.state['bot_shared_knowledge']:
+        sql += " AND channel = %s"
+        sql_args.append(event['channel'])
+    cur.execute(sql, sql_args)
+    db.commit()
+    wcb.reply("entry removed.")
+    return wcb.signal_stop # prevent handling both the 'trigger' and the 'command' event.
+
+
 def run(wcb, event):
     if event['command'] == 'forget':
-        if not wcb.perms('forget'):
-            wcb.reply("you can't do that. Sorry.")
-            return wcb.signal_stop
-            
-        re = wcb.re.compile('([^\s]+)\s(.*)')
-        res = re.match(event['command_args'])
-        if not res:
-            wcb.reply("command unclear. Try '!forget <key> <[partof]value>'. Will remove all matching entries.")
-            return wcb.signal_stop
+        return do_forget(wcb, event)
 
-        pub_k = res.group(1)
-        db_k = res.group(1).lower()
-        v = res.group(2)
-
-        db = wcb.db_connect()
-        cur = db.cursor()
-        sql = "DELETE FROM wcb_infoitems WHERE item = %s AND value LIKE %s"
-        sql_args = [db_k, '%%'+v+'%%']
-        if not wcb.state['bot_shared_knowledge']:
-            sql += " AND channel = %s"
-            sql_args.append(event['channel'])
-        cur.execute(sql, sql_args)
-        db.commit()
-        wcb.reply("entry removed.")
-        return wcb.signal_stop # prevent handling both the 'trigger' and the 'command' event.
+    if event['command'] in ['si', 'search-info']:
+        return do_search(wcb, event)
 
 
     # Process 'non command' triggers here
@@ -57,7 +91,7 @@ def run(wcb, event):
         return wcb.signal_stop
 
 
-    # see if it is an attempt to grep through the defitions of a thing?
+    # See if it is an attempt to grep through the defitions of a thing?
     re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?\s+\|\s+grep\s+(.*)')
     res = re.match(txt)
     if res:

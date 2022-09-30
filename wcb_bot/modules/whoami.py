@@ -8,6 +8,9 @@ def config(wcb):
 
 
 def run(wcb, event):
+    if 'test =' in event['text']: # ignore '!test = bla' events.
+        return
+
     rtxt = "you are %s at %s" % (event['nick'], event['nickmask'])
 
     if event['nickmask'] == wcb.state['bot_ownermask']:
