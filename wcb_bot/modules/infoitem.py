@@ -1,7 +1,7 @@
 def config(wcb):
     return {
         'events': ['irc_in2_PRIVMSG'],
-        'commands': ['forget', 'si', 'search-info'],
+        'commands': ['forget', 'si', 'is', 'search-info', 'info-search'],
         'permissions': ['user'],
         'help': "Get and set info items.\nBy default infoitems are kept per channel.\nSet 'bot_shared_knowledge' in config to True to disable."
     }
@@ -66,7 +66,7 @@ def run(wcb, event):
     if event['command'] == 'forget':
         return do_forget(wcb, event)
 
-    if event['command'] in ['si', 'search-info']:
+    if event['command'] in ['si', 'is', 'search-info', 'info-search']:
         return do_search(wcb, event)
 
 
