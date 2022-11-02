@@ -28,7 +28,7 @@ def run(wcb, event):
     args = event['command_args']
     if 'noconv' in args:
         args = re.sub(r'noconv', '', args)
-    elif re.search(r'[KMGTPEkmgtpe][bB]\s', args):
+    elif re.search(r'[KMGTPEkmgtpe][bB](?:\s|$)', args):
         converted = True
         args = re.sub(r'([KMGTPEkmgtpe])([bB])(?!p)', r'\1i\2', args)
         args = re.sub(r'\s{2,}', ' ', args)
