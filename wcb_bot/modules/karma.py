@@ -5,7 +5,7 @@ def config(wcb):
     return {
         'events': ['irc_in2_PRIVMSG'],
         'commands': [
-            'karma', 'setkarma', 'set-karma',
+            'karma', 'setkarma', 'set-karma', 'karma-search',
             'who-karma-up', 'who-up', 'karma-who-up', 'karma-whoup',
             'who-karma-down', 'who-down', 'karma-who-down', 'karma-whodown',
             'why-karma-up', 'why-up', 'karma-why-up', 'karma-whyup',
@@ -42,6 +42,9 @@ def run(wcb, event):
         item = res.group(1).lower()
         direction = res.group(2)
         reason = res.group(3)
+
+        if item.startswith('karma '):
+            item = item.replace("karma ", "")
 
         update_sql = ''
         init_value = 0
@@ -248,3 +251,33 @@ def run(wcb, event):
         cur.execute(sql, (item, value, event['channel'], value))
         db.commit()
         return wcb.reply("ok.")
+
+
+    res = wcb.re.match("^karma-search", event['command'])
+    if res:
+        item = event['command_args'].lower()
+        if item == '': return wcb.reply('please specify a term to search for.')
+
+        sql = "SELECT item, karma FROM wcb_karma WHERE item LIKE %s"
+        sql_arr = ['%' + item + '%']
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_arr.append(event['channel'])
+
+        cur.execute(sql, sql_arr)
+        karma_items = cur.fetchall()
+        if not karma_items:
+            return wcb.reply("no matching karma items for term '%s'." % item)
+
+        itemarr = []
+        itemcnt = 0
+        rtxt = ''
+        for ktuple in karma_items:
+            itemarr.append("%s (%d)" % (ktuple[0], ktuple[1]))
+            itemcnt += 1
+            if itemcnt >= 15:
+                rtxt = "(15 of %d matches): " % len(karma_items)
+                break
+
+        rtxt += " .. ".join(itemarr)
+        return wcb.reply("these karma items match '%s': %s" % (item, rtxt))
