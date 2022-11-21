@@ -12,14 +12,12 @@ def do_search(wcb, event):
 
     db = wcb.db_connect()
     cur = db.cursor()
-    sql = "SELECT DISTINCT item, insert_time FROM wcb_infoitems WHERE value LIKE %s"
+    sql = "SELECT DISTINCT item FROM wcb_infoitems WHERE value LIKE %s"
     sql_args = ['%'+search_for+'%']
 
     if not wcb.state['bot_shared_knowledge']:
         sql += " AND channel = %s"
         sql_args.append(event['channel'])
-
-    sql += " ORDER BY insert_time ASC"
 
     cur.execute(sql, sql_args)
     res = cur.fetchall()
