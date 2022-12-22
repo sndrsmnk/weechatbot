@@ -102,7 +102,7 @@ def alarm_add(wcb, event):
 
 def alarm_del(wcb, event):
     if not event['command_args'].isnumeric():
-        return wcb.reply('"%s" does not look like an number. Specify alarm index number to delete.' % e) #vent['command_args'])
+        return wcb.reply('"%s" does not look like an number. Specify alarm index number to delete.' % event['command_args'])
     alarm_del_idx = int(event['command_args']) - 1
 
     if alarm_del_idx >= len(wcb.alarms) or alarm_del_idx < 0:
