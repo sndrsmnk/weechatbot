@@ -77,6 +77,11 @@ def run(wcb, event):
 
     if event['command'] == 'fipostats':
         lookup_username = event['command_args']
+        display_limit = 5
+        if str(lookup_username).isdigit():
+            display_limit = int(lookup_username)
+            lookup_username = ''
+
 
         sql_arr = []
         sql = "SELECT date, username FROM fipo"
@@ -148,7 +153,7 @@ def run(wcb, event):
             out_nick += "\0030\003\002\002"
             out_nick += nick[1:]
             r_arr.append("%s(%s)" % (out_nick, fipocount))
-            if display_count == 5:
+            if display_count == display_limit:
                 break
 
         return wcb.say("Top %d FIPO'ers: %s" % (display_count, ", ".join(r_arr)))
