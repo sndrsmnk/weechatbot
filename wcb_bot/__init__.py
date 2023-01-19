@@ -390,6 +390,9 @@ class WeeChatBot:
         if not re.match('^[#&]', channel):
             server = channel
             re_sult = re.match('^(\S+)\s', message)
+            if not re_sult:
+                dlog("UDP message from [%s]:%s failed to properly parse: '%s'" % (host, port, str_data))
+                return self.weechat.WEECHAT_RC_ERROR
             channel = re_sult.group(1)
             if not re.match('^[#&]', channel):
                 dlog("This '%s' does not look like a channel name" % channel)
