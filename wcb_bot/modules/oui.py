@@ -15,15 +15,15 @@ def config(wcb):
 def run(wcb, event):
     mac_input = event['command_args']
     if not mac_input or mac_input == '':
-        if event['command'].lower() == "oui":
+        if event['command'] == "oui":
             repondre = [
                 "Ah putain, Non!",
                 "... du Paturain!",
                 "... Ah, l'amour!",
                 "Je ne sais pas ce que vous voulez dire!"
             ]
-            wcb.reply(random.choice(repondre))
-        return wcb.reply("Usage: ![mac|oui] <macaddress> - only the first three octets are of importance.")
+            wcb.say(random.choice(repondre))
+        return wcb.reply("Usage: ![mac|oui] <macaddress>")
 
     try:
         res = requests.get("https://api.macvendors.com/" + mac_input)
