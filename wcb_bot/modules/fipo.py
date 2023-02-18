@@ -45,6 +45,8 @@ def run(wcb, event):
 
         if res[0] == event['user_info']['username']:
             return wcb.say("Yes! :D  It was YOU!  YOU SCORED TODAY'S FIPO!!  \\o/")
+        elif today.hour == 0 and today.minute <= 5:
+            return wcb.say(f"mipo - whahahaha, too late!")
 
 
     if event['command'] == 'fiposet' or event['command'] == 'setfipo':
