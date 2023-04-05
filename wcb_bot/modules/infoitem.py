@@ -148,6 +148,7 @@ def run(wcb, event):
 
         cur.execute(sql, sql_args)
         res = cur.fetchall()
+        numres = len(res)
         defstr = []
         for val in res:
             defstr.append(val[0])
@@ -158,5 +159,9 @@ def run(wcb, event):
                 wcb.say('%s is not defined.' % pub_k)
             return wcb.signal_stop
 
-        wcb.say("%s is %s" % (pub_k, retstr))
+        if numres > 20:
+            wcb.reply("there's a lot (%d) of definitions. I'll message them to you." % numres)
+            wcb.private("%s is %s" % (pub_k, retstr))
+        else:
+            wcb.say("%s is %s" % (pub_k, retstr))
         return wcb.signal_stop
