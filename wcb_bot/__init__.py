@@ -229,7 +229,7 @@ class WeeChatBot:
         # Look for modules to handle this event.
         event_command_handled = 0
         event['trigger'] = ''
-        run_module = None
+        run_modules = []
 
         # First try finding modules that trigger by a command
         for module in list(self.modules):
@@ -238,47 +238,47 @@ class WeeChatBot:
                     dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
                     continue
                 event['trigger'] = 'command'
-                run_module = module
-                break
+                run_modules.append(module)
 
         # Then look for modules that trigger on events
-        if not run_module:
+        if not run_modules:
             for module in list(self.modules):
                 if event['signal'] in self.modules[module]['events']:
                     if not self.perms(self.modules[module]['permissions']):
                         dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
                         continue
                     event['trigger'] = 'event'
-                    run_module = module
-                    break
+                    run_modules.append(module)
 
         # If no module was found, just return OK
-        if not run_module:
+        if not run_modules:
             return self.weechat.WEECHAT_RC_OK
 
-        if not handle_event_silently or self.state['debug_event'] is True:
-            dlog("Module '%s' handles '%s' by '%s' method." % (run_module, event['signal'], event['trigger']))
+        # Multiple modules can claim a command or event. Event is more likely.
+        for run_module in run_modules:
+            if not handle_event_silently or self.state['debug_event'] is True:
+                dlog("Module '%s' handles '%s' by '%s' method." % (run_module, event['signal'], event['trigger']))
 
-        module_return_state = self.signal_cont
-        try:
-            module_return_state = self.modules[run_module]['object'].run(self, event)
-            if not module_return_state:
-                module_return_state = self.signal_cont
-        except Exception as err:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            while 1:
-                if not exc_traceback.tb_next:
-                    break
-                exc_traceback = exc_traceback.tb_next
-            frame = exc_traceback.tb_frame
-            mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
-            rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
-            if event['weechat_buffer']:
-                self.say(rtxt)
-            return dlog(rtxt)
+            module_return_state = self.signal_cont
+            try:
+                module_return_state = self.modules[run_module]['object'].run(self, event)
+                if not module_return_state:
+                    module_return_state = self.signal_cont
+            except Exception as err:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                while 1:
+                    if not exc_traceback.tb_next:
+                        break
+                    exc_traceback = exc_traceback.tb_next
+                frame = exc_traceback.tb_frame
+                mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
+                rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
+                if event['weechat_buffer']:
+                    self.say(rtxt)
+                return dlog(rtxt)
 
-        if module_return_state == self.signal_stop:
-            return self.weechat.WEECHAT_RC_OK
+            if module_return_state == self.signal_stop:
+                return self.weechat.WEECHAT_RC_OK
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
         # unless someone types !!!! for example.
