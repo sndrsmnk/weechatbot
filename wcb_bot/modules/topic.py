@@ -24,7 +24,7 @@ def run(wcb, event):
 
     if event['signal'] == 'irc_in_TOPIC':
         if not topic:
-            return wcb.mlog("Lookup of topic on '%s' yielded no value.")
+            return wcb.mlog("Lookup of topic on '%s' yielded no value." % event['channel'])
         wcb.state['previous_topic'][event['channel']] = topic
         return wcb.signal_cont
 
