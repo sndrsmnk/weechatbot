@@ -5,12 +5,8 @@ def config(wcb):
     return {
         'events': ['irc_in2_PRIVMSG'],
         'commands': [
-<<<<<<< Updated upstream
             'karma', 'setkarma', 'set-karma', 'karma-search',
-=======
-            'karma', 'setkarma', 'set-karma',
             'karma-del', 'del-karma',
->>>>>>> Stashed changes
             'who-karma-up', 'who-up', 'karma-who-up', 'karma-whoup',
             'who-karma-down', 'who-down', 'karma-who-down', 'karma-whodown',
             'why-karma-up', 'why-up', 'karma-why-up', 'karma-whyup',
