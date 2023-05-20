@@ -5,7 +5,12 @@ def config(wcb):
     return {
         'events': ['irc_in2_PRIVMSG'],
         'commands': [
+<<<<<<< Updated upstream
             'karma', 'setkarma', 'set-karma', 'karma-search',
+=======
+            'karma', 'setkarma', 'set-karma',
+            'karma-del', 'del-karma',
+>>>>>>> Stashed changes
             'who-karma-up', 'who-up', 'karma-who-up', 'karma-whoup',
             'who-karma-down', 'who-down', 'karma-who-down', 'karma-whodown',
             'why-karma-up', 'why-up', 'karma-why-up', 'karma-whyup',
@@ -142,7 +147,6 @@ def run(wcb, event):
         else:
             return wcb.reply("no reasons were given for karma %s" % direction)
     
-
     res = wcb.re.match("^(?:karma-who|who-karma|who)\-?(up|down)", event['command'])
     if res:
         direction = res.group(1)
@@ -249,6 +253,21 @@ def run(wcb, event):
 
         sql = "INSERT INTO wcb_karma (item, karma, channel) VALUES (%s, %s, %s) ON CONFLICT (item, channel) DO UPDATE SET karma = %s"
         cur.execute(sql, (item, value, event['channel'], value))
+        db.commit()
+        return wcb.reply("ok.")
+
+
+    res = wcb.re.match("^(?:karma-del|del-karma)\s+(.*)", event['command'])
+    if res:
+        if not wcb.perms(["owner", "set-karma"]): return wcb.reply("i can't let you do that.")
+        item = res.group(1).lower()
+
+        sql = "DELETE FROM wcb_karma WHERE item = ?"
+        sql_arr = [item]
+        if not wcb.state['bot_shared_knowledge']:
+            sql += " AND channel = %s"
+            sql_arr.append(event['channel'])
+        cur.execute(sql, sql_arr)
         db.commit()
         return wcb.reply("ok.")
 
