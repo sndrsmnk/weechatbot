@@ -102,7 +102,7 @@ def run(wcb, event):
         db = wcb.db_connect()
         cur = db.cursor()
 
-        sql = "SELECT value FROM wcb_infoitems WHERE item = %s AND value LIKE %s"
+        sql = "SELECT value FROM wcb_infoitems WHERE item = %s AND value ILIKE %s"
         sql_args = [db_k, '%'+grep_v+'%']
 
         if not wcb.state['bot_shared_knowledge']:
