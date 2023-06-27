@@ -1,7 +1,7 @@
 def config(wcb):
     return {
         'events': ['irc_in2_PRIVMSG'],
-        'commands': ['forget', 'si', 'is', 'search-info', 'info-search'],
+        'commands': ['define', 'forget', 'si', 'is', 'search-info', 'info-search'],
         'permissions': ['user'],
         'help': "Get and set info items.\nBy default infoitems are kept per channel.\nSet 'bot_shared_knowledge' in config to True to disable."
     }
@@ -60,9 +60,28 @@ def do_forget(wcb, event):
     return wcb.signal_stop # prevent handling both the 'trigger' and the 'command' event.
 
 
+def do_define(wcb, event):
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(?:define\s)?(.+?) = (.*)')
+    res = re.match(event['text'])
+    pub_k = res.group(1)
+    db_k = res.group(1).lower()
+    v = res.group(2)
+
+    db = wcb.db_connect()
+    cur = db.cursor()
+    sql = "INSERT INTO wcb_infoitems (users_id, item, value, channel) VALUES (%s, %s, %s, %s)"
+    cur.execute(sql, (event['user_info']['id'], db_k, v, event['channel']))
+    db.commit()
+    wcb.reply("entry added.")
+    return wcb.signal_stop
+
+
 def run(wcb, event):
     if event['command'] == 'forget':
         return do_forget(wcb, event)
+
+    if event['command'] == 'define':
+        return do_define(wcb, event)
 
     if event['command'] in ['si', 'is', 'search-info', 'info-search']:
         return do_search(wcb, event)
@@ -73,20 +92,10 @@ def run(wcb, event):
 
 
     # See if it is an attempt to define a thing?
-    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?) = (.*)')
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(?:define\s)?(.+?) = (.*)')
     res = re.match(txt)
     if res:
-        pub_k = res.group(1)
-        db_k = res.group(1).lower()
-        v = res.group(2)
-
-        db = wcb.db_connect()
-        cur = db.cursor()
-        sql = "INSERT INTO wcb_infoitems (users_id, item, value, channel) VALUES (%s, %s, %s, %s)"
-        cur.execute(sql, (event['user_info']['id'], db_k, v, event['channel']))
-        db.commit()
-        wcb.reply("entry added.")
-        return wcb.signal_stop
+        return do_define(wcb, event)
 
 
     # See if it is an attempt to grep through the defitions of a thing?
