@@ -30,7 +30,8 @@ def timer_event(wcb, event):
         now = int(time.time())
         last_upd = int(wcb.state['reoplist'][tag]['last_check'])
         if now - last_upd > wcb.state['reoplist_interval']:
-            _, channel = tag.split('.')
+            _, *channel = tag.split('.')
+            channel = '.'.join(channel)
             wcb.weechat.command(cmd_output_buffer, f"/mode {channel} +R")
             wcb.state['reoplist'][tag]['last_check'] = now
             wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
@@ -73,7 +74,7 @@ def run(wcb, event):
     if event['signal'] == 'timer_signal':
         return timer_event(wcb, event)
 
-    # XXX hardcoded
+    # AFAIK only IRCnet supports +R reop-list
     if event['server'] != 'ircnet':
         return wcb.weechat.WEECHAT_RC_OK
 

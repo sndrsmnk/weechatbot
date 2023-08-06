@@ -116,9 +116,7 @@ class WeeChatBot:
         weechat.hook_signal("*,irc_in2_topic",    "shim_wcb_handle_event",     "")
         weechat.hook_signal("*,irc_in2_invite",   "shim_wcb_handle_event",     "")
 
-        # reoplist module signal plumbing, only on IRCNet
-        # XXX do we hardcode that ircname 'ircnet' ?
-        #     we nouw also do in the reoplist.py module, so ...
+        # reoplist (chan mode +R) module signal plumbing, only on IRCNet
         weechat.hook_signal("ircnet,irc_in2_344", "shim_wcb_handle_event",     "")
         weechat.hook_signal("ircnet,irc_in2_345", "shim_wcb_handle_event",     "")
 
