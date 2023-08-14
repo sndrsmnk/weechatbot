@@ -82,7 +82,6 @@ def run(wcb, event):
             display_limit = int(lookup_username)
             lookup_username = ''
 
-
         sql_arr = []
         sql = "SELECT date, username FROM fipo"
         if not wcb.state['bot_shared_knowledge']:
@@ -153,6 +152,8 @@ def run(wcb, event):
             out_nick += "\0030\003\002\002"
             out_nick += nick[1:]
             r_arr.append("%s(%s)" % (out_nick, fipocount))
+            if display_count == len(fipo_stats.items()):
+                break
             if display_count == display_limit:
                 break
 
