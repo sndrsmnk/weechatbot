@@ -70,6 +70,13 @@ def run(wcb, event):
 
     return wcb.reply(restxt)
 
+def test_lookup():
+    for oui, res in [
+        ('009069', 'Juniper Networks'),
+        ('019069', 'Juniper Networks (multicast)'),
+      ]:
+      assert OUILookup(oui) == res
+
 if __name__ == '__main__':
     import sys
     print(OUILookup(sys.argv[1]))
