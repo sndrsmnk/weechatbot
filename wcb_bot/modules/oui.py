@@ -52,3 +52,7 @@ def run(wcb, event):
     # API returns vendor name as a single string, or JSON on errors.
 
     return wcb.reply(restxt)
+
+if __name__ == '__main__':
+    import sys
+    print(OUILookup(sys.argv[1]))
