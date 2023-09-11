@@ -3,6 +3,7 @@ import json
 import random
 import binascii
 
+# TODO: OUIs that are not 24 bits
 
 def config(wcb):
     return {
