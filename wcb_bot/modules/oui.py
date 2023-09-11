@@ -74,6 +74,8 @@ def test_lookup():
     for oui, res in [
         ('009069', 'Juniper Networks'),
         ('019069', 'Juniper Networks (multicast)'),
+      # ('525400', 'QEMU virtual NIC'),
+      # ('00:00:5e:00:01:01', 'IANA (IPv4 VRRP id 1)'),
       ]:
       assert OUILookup(oui) == res
 
