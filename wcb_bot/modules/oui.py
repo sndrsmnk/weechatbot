@@ -36,7 +36,7 @@ def OUItrySpecial(mac):
 
 
 def OUILookup(mac_input):
-    mac_input = mac_input.replace('-', '').replace(':', '')
+    mac_input = mac_input.replace('-', '').replace(':', '').upper()
     if len(mac_input) < 6:
         raise Exception("need at least 3 octets")
 
@@ -52,7 +52,7 @@ def OUILookup(mac_input):
     if octet0 & 2:
         extra.append('admindefined')
 
-    mac_input = '%02x%s' % (octet0 & (0xff-3), mac_input[2:])
+    mac_input = '%02X%s' % (octet0 & (0xff-3), mac_input[2:])
 
     res = ''
 
@@ -100,6 +100,7 @@ def test_lookup():
         ('019069', 'Juniper Networks (multicast)'),
         ('00005E-00-02-01', 'Icann, Iana Department (IPv6 VRRP, id 1)'),
         ('0000:5E:00-01-55', 'Icann, Iana Department (IPv4 VRRP, id 85)'),
+        ('3c:e1:a1:4c:dc:ac', 'Universal Global Scientific Industrial')
       # ('525400', 'QEMU virtual NIC'),
       ]:
       assert OUILookup(oui) == res
