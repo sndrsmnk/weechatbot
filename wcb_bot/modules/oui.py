@@ -12,22 +12,17 @@ def config(wcb):
     }
 
 def OUILookup(mac_input):
-    res = requests.get("https://api.macvendors.com/" + mac_input)
+    mac_input = mac_input.replace('-', '').replace(':', '')
+    if len(mac_input) < 6:
+        raise Exception("need at least 3 octets")
 
-    restxt = res.text
-    if restxt.startswith('{"'):
-        obj = json.loads(restxt)
-        if 'errors' in obj and 'detail' in obj['errors']:
-            detail = obj['errors']['detail']
-            if detail == "Not Found":
-                raise KeyError(detail)
-            else:
-                raise Exception(detail)
-        else:
-            raise Exception("Got JSON that i cant deal with yet: '%s'" % restxt)
+    mac_input = mac_input[:6]
 
-    return restxt
-
+    with open('/usr/share/nmap/nmap-mac-prefixes', 'r') as f :
+        for line in f:
+          if line.startswith(mac_input):
+            return(line[7:-1])
+            break
 
 def run(wcb, event):
     mac_input = event['command_args']
