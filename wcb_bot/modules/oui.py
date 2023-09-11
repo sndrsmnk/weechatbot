@@ -13,6 +13,9 @@ def config(wcb):
     }
 
 def OUItrySpecial(mac):
+    if mac.startswith('525400'):  # 525400 is in the nmap MAC database too, but we look for 505400 there if the input is 525400
+        return ['qemu/kvm?']
+
     try:
         mac = binascii.a2b_hex(mac)
     except:
@@ -101,8 +104,8 @@ def test_lookup():
         ('019069', 'Juniper Networks (multicast)'),
         ('00005E-00-02-01', 'Icann, Iana Department (IPv6 VRRP, id 1)'),
         ('0000:5E:00-01-55', 'Icann, Iana Department (IPv4 VRRP, id 85)'),
-        ('3c:e1:a1:4c:dc:ac', 'Universal Global Scientific Industrial')
-      # ('525400', 'QEMU virtual NIC'),
+        ('3c:e1:a1:4c:dc:ac', 'Universal Global Scientific Industrial'),
+        ('525400', 'unknown (qemu/kvm?, admindefined)'),
       ]:
       assert OUILookup(oui) == res
 
