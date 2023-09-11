@@ -94,6 +94,7 @@ def run(wcb, event):
 
     return wcb.reply(restxt)
 
+# $ pytest ./oui.py
 def test_lookup():
     for oui, res in [
         ('009069', 'Juniper Networks'),
@@ -105,6 +106,7 @@ def test_lookup():
       ]:
       assert OUILookup(oui) == res
 
+# $ python3 ./oui.py 3c:e1:a1:4c:dc:ac
 if __name__ == '__main__':
     import sys
     print(OUILookup(sys.argv[1]))
