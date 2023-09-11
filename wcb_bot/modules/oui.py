@@ -59,6 +59,8 @@ def OUILookup(mac_input):
 
     res = ''
 
+    # TODO: make this filename configurable
+    # TODO: write down, perhaps right here in this comment, how to make a fresh file in the same format
     with open('/usr/share/nmap/nmap-mac-prefixes', 'r') as f :
         for line in f:
           if line.startswith(mac_input):
