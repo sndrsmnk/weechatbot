@@ -35,6 +35,7 @@ $ ln -sf ~/.weechat/python/wcb.py ~/.weechat/python/autoload/wcb.py
  * Set up Weechat as you would normally do, configure networks, servers, channels, specify auto{connect,join} etc.
    * `/script install autojoin.py`
    * `/server add someNetwork someServer.tld/port -autoconnect`
+   * `/connect someNetwork`
    * `/join #yourChannel`
    * `/autojoin --run`
 
