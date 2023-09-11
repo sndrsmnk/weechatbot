@@ -11,6 +11,23 @@ def config(wcb):
         'help': "Look up vendors for mac addresses using macvendors.com"
     }
 
+def OUILookup(mac_input):
+    res = requests.get("https://api.macvendors.com/" + mac_input)
+
+    restxt = res.text
+    if restxt.startswith('{"'):
+        obj = json.loads(restxt)
+        if 'errors' in obj and 'detail' in obj['errors']:
+            detail = obj['errors']['detail']
+            if detail == "Not Found":
+                raise KeyError(detail)
+            else:
+                raise Exception(detail)
+        else:
+            raise Exception("Got JSON that i cant deal with yet: '%s'" % restxt)
+
+    return restxt
+
 
 def run(wcb, event):
     mac_input = event['command_args']
@@ -26,17 +43,12 @@ def run(wcb, event):
         return wcb.reply("Usage: ![mac|oui] <macaddress>")
 
     try:
-        res = requests.get("https://api.macvendors.com/" + mac_input)
+        restxt = OUILookup(mac_input)
+    except KeyError:
+        return wcb.reply("Not Found");
     except Exception as err:
         return wcb.reply("API fail: %s" % err)
 
     # API returns vendor name as a single string, or JSON on errors.
-    restxt = res.text
-    if restxt.startswith('{"'):
-        obj = json.loads(restxt)
-        if 'errors' in obj and 'detail' in obj['errors']:
-            return wcb.reply(obj['errors']['detail'])
-        else:
-            return wcb.reply("Got JSON that i cant deal with yet: '%s'" % restxt)
 
     return wcb.reply(restxt)
