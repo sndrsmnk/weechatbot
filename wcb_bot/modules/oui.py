@@ -90,8 +90,6 @@ def run(wcb, event):
 
     try:
         restxt = OUILookup(mac_input)
-    except KeyError:
-        return wcb.reply("Not Found");
     except Exception as err:
         return wcb.reply("API fail: %s" % err)
 
