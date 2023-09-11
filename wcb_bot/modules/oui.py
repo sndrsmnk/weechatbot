@@ -1,6 +1,7 @@
 import requests
 import json
 import random
+import binascii
 
 
 def config(wcb):
@@ -11,16 +12,39 @@ def config(wcb):
         'help': "Look up vendors for mac addresses using macvendors.com"
     }
 
+def OUItrySpecial(mac):
+    try:
+        mac = binascii.a2b_hex(mac)
+    except:
+        return []
+
+    res = []
+
+    if len(mac) == 6 and mac.startswith(b'\x00\x00\x5e'): # IANA
+        # https://www.iana.org/assignments/ethernet-numbers/ethernet-numbers.xhtml#ethernet-numbers-1
+        if mac[3] == 0:
+            if mac[4] == 1:   # 00-00-5E-00-01-xx
+                res.append('IPv4 VRRP')
+            elif mac[4] == 2:
+                res.append('IPv6 VRRP')
+            else:
+                return []
+
+            res.append('id %d' % (mac[5],))
+
+    return res
+
+
 def OUILookup(mac_input):
     mac_input = mac_input.replace('-', '').replace(':', '')
     if len(mac_input) < 6:
         raise Exception("need at least 3 octets")
 
+    extra = OUItrySpecial(mac_input)
+
     mac_input = mac_input[:6]
 
     octet0 = int(mac_input[0:2], 16)
-
-    extra = []
 
     if octet0 & 1:
         extra.append('multicast')
@@ -74,8 +98,9 @@ def test_lookup():
     for oui, res in [
         ('009069', 'Juniper Networks'),
         ('019069', 'Juniper Networks (multicast)'),
+        ('00005E-00-02-01', 'Icann, Iana Department (IPv6 VRRP, id 1)'),
+        ('0000:5E:00-01-55', 'Icann, Iana Department (IPv4 VRRP, id 85)'),
       # ('525400', 'QEMU virtual NIC'),
-      # ('00:00:5e:00:01:01', 'IANA (IPv4 VRRP id 1)'),
       ]:
       assert OUILookup(oui) == res
 
