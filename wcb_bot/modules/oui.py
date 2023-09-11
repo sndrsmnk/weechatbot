@@ -18,11 +18,33 @@ def OUILookup(mac_input):
 
     mac_input = mac_input[:6]
 
+    octet0 = int(mac_input[0:2], 16)
+
+    extra = []
+
+    if octet0 & 1:
+        extra.append('multicast')
+
+    if octet0 & 2:
+        extra.append('admindefined')
+
+    mac_input = '%02x%s' % (octet0 & (0xff-3), mac_input[2:])
+
+    res = ''
+
     with open('/usr/share/nmap/nmap-mac-prefixes', 'r') as f :
         for line in f:
           if line.startswith(mac_input):
-            return(line[7:-1])
+            res = line[7:-1]
             break
+
+    if not res:
+        res = 'unknown'
+
+    if extra:
+        res = '%s (%s)' % (res, ', '.join(extra))
+
+    return res
 
 def run(wcb, event):
     mac_input = event['command_args']
