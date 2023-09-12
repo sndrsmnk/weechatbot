@@ -17,6 +17,16 @@ def config(wcb):
     }
 
 def OUItrySpecial(mac):
+    arpsponges = {
+        'C6174426E887': 'AMSIX',
+        '001B215F2E35': 'LINX'
+    }
+
+    ix = arpsponges.get(mac)
+
+    if ix:
+        return ['ARP sponge', ix]
+
     if mac.startswith('525400'):  # 525400 is in the nmap MAC database too, but we look for 505400 there if the input is 525400
         return ['qemu/kvm?']
 
