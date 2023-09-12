@@ -19,7 +19,8 @@ def config(wcb):
 def OUItrySpecial(mac):
     arpsponges = {
         'C6174426E887': 'AMSIX',
-        '001B215F2E35': 'LINX'
+        '001B215F2E35': 'LINX',
+        '0ABFA1100000': 'DECIX'
     }
 
     ix = arpsponges.get(mac)
