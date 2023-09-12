@@ -2,6 +2,9 @@ import requests
 import json
 import random
 import binascii
+import time
+
+from collections import namedtuple
 
 # TODO: OUIs that are not 24 bits
 
@@ -38,8 +41,48 @@ def OUItrySpecial(mac):
 
     return res
 
+def macvendorsLookup(wcb, mac_input):
+    res = requests.get("https://api.macvendors.com/" + mac_input)
 
-def OUILookup(mac_input):
+    restxt = res.text
+    if restxt.startswith('{"'):
+        obj = json.loads(restxt)
+        if 'errors' in obj and 'detail' in obj['errors']:
+            detail = obj['errors']['detail']
+            if detail == "Not Found":
+                return detail
+            else:
+                raise Exception(detail)
+        else:
+            raise Exception("Got JSON that i cant deal with yet: '%s'" % restxt)
+
+    return restxt
+
+def nmapLookup(wcb, mac_input):
+    res = ''
+
+    with open('/usr/share/nmap/nmap-mac-prefixes', 'r') as f :
+        for line in f:
+          if line.startswith(mac_input):
+            res = line[7:-1]
+            break
+
+    if not res:
+        res = 'unknown'
+
+    return res
+
+def actualOUILookup(wcb, mac_input):
+    backend = wcb.state.get('oui_backend', 'macvendors')
+
+    if backend == 'macvendors':
+        return macvendorsLookup(wcb, mac_input)
+    elif backend == 'nmap':
+        return nmapLookup(wcb, mac_input)
+    else:
+        return 'please set oui_backend to "macvendors" or "nmap"'
+
+def OUILookup(wcb, mac_input):
     mac_input = mac_input.replace('-', '').replace(':', '').upper()
     if len(mac_input) < 6:
         raise Exception("need at least 3 octets")
@@ -58,18 +101,9 @@ def OUILookup(mac_input):
 
     mac_input = '%02X%s' % (octet0 & (0xff-3), mac_input[2:])
 
-    res = ''
-
     # TODO: make this filename configurable
     # TODO: write down, perhaps right here in this comment, how to make a fresh file in the same format
-    with open('/usr/share/nmap/nmap-mac-prefixes', 'r') as f :
-        for line in f:
-          if line.startswith(mac_input):
-            res = line[7:-1]
-            break
-
-    if not res:
-        res = 'unknown'
+    res = actualOUILookup(wcb, mac_input)
 
     if extra:
         res = '%s (%s)' % (res, ', '.join(extra))
@@ -90,7 +124,7 @@ def run(wcb, event):
         return wcb.reply("Usage: ![mac|oui] <macaddress>")
 
     try:
-        restxt = OUILookup(mac_input)
+        restxt = OUILookup(wcb, mac_input)
     except Exception as err:
         return wcb.reply("API fail: %s" % err)
 
@@ -100,17 +134,22 @@ def run(wcb, event):
 
 # $ pytest ./oui.py
 def test_lookup():
-    for oui, res in [
-        ('009069', 'Juniper Networks'),
-        ('019069', 'Juniper Networks (multicast)'),
-        ('00005E-00-02-01', 'Icann, Iana Department (IPv6 VRRP, id 1)'),
-        ('0000:5E:00-01-55', 'Icann, Iana Department (IPv4 VRRP, id 85)'),
-        ('3c:e1:a1:4c:dc:ac', 'Universal Global Scientific Industrial'),
-        ('525400', 'unknown (qemu/kvm?, admindefined)'),
-      ]:
-      assert OUILookup(oui) == res
+    for backend in ['nmap', 'macvendors']:
+        wcb = namedtuple('state', ['state'])(dict(oui_backend=backend))
+        for oui, res in [
+            ('009069', ['Juniper Networks']),
+            ('019069', ['Juniper Networks (multicast)']),
+            ('00005E-00-02-01', ['Icann, Iana Department (IPv6 VRRP, id 1)', 'ICANN, IANA Department (IPv6 VRRP, id 1)']),
+            ('0000:5E:00-01-55', ['Icann, Iana Department (IPv4 VRRP, id 85)', 'ICANN, IANA Department (IPv4 VRRP, id 85)']),
+            ('3c:e1:a1:4c:dc:ac', ['Universal Global Scientific Industrial', 'Universal Global Scientific Industrial Co., Ltd.']),
+            ('525400', ['unknown (qemu/kvm?, admindefined)', 'Not Found (qemu/kvm?, admindefined)']),
+          ]:
+          assert OUILookup(wcb, oui) in res, backend
+          if backend == 'macvendors':
+            time.sleep(2)
 
-# $ python3 ./oui.py 3c:e1:a1:4c:dc:ac
+# $ python3 ./oui.py macvendors 3c:e1:a1:4c:dc:ac
 if __name__ == '__main__':
     import sys
-    print(OUILookup(sys.argv[1]))
+    wcb = namedtuple('state', ['state'])(dict(oui_backend=sys.argv[1]))
+    print(OUILookup(wcb, sys.argv[2]))
