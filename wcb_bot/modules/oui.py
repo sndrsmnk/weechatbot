@@ -8,6 +8,7 @@ import re
 from collections import namedtuple
 
 # TODO: OUIs that are not 24 bits
+# TODO: wwn?
 
 def config(wcb):
     return {
