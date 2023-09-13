@@ -184,7 +184,7 @@ def test_lookup():
             ('00005E-00-02-01', ['Icann, Iana Department (IPv6 VRRP, id 1)', 'ICANN, IANA Department (IPv6 VRRP, id 1)']),
             ('0000:5E:00-01-55', ['Icann, Iana Department (IPv4 VRRP, id 85)', 'ICANN, IANA Department (IPv4 VRRP, id 85)']),
             ('01005E-40-41-42', ['Icann, Iana Department (IPv4 224.64.65.66?, multicast)', 'ICANN, IANA Department (IPv4 224.64.65.66?, multicast)']),
-            ('333340414243', ['unknown (IPv6 multicast for xx::4041:4243, multicast, admindefined)']),
+            ('333340414243', ['unknown (IPv6 multicast for xx::4041:4243, multicast, admindefined)', 'Not Found (IPv6 multicast for xx::4041:4243, multicast, admindefined)']),
             ('3c:e1:a1:4c:dc:ac', ['Universal Global Scientific Industrial', 'Universal Global Scientific Industrial Co., Ltd.']),
             ('525400', ['unknown (qemu/kvm?, admindefined)', 'Not Found (qemu/kvm?, admindefined)']),
           ]:
