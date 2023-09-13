@@ -13,6 +13,9 @@ def config(wcb):
 
 
 def run(wcb, event):
+    if wcb.state.get('fipo_disabled', False):
+        return
+
     fdb_file = "%s/module_fipo.sqlite3" % wcb.state['bot_base']
     fdb = sqlite3.connect(fdb_file)
 
