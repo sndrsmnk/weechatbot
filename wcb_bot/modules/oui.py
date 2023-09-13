@@ -17,7 +17,7 @@ def config(wcb):
         'help': "Look up vendors for mac addresses using macvendors.com"
     }
 
-def OUItrySpecial(mac):
+def OUItrySpecial(mac, extra):
     arpsponges = {
         'C6174426E887': 'AMSIX',
         '001B215F2E35': 'LINX',
@@ -27,31 +27,29 @@ def OUItrySpecial(mac):
     ix = arpsponges.get(mac)
 
     if ix:
-        return ['ARP sponge', ix]
+        extra.extend(['ARP sponge', ix])
+        return
 
     if mac.startswith('525400'):  # 525400 is in the nmap MAC database too, but we look for 505400 there if the input is 525400
-        return ['qemu/kvm?']
+        extra.append('qemu/kvm?')
+        return
 
     try:
-        mac = binascii.a2b_hex(mac)
+        bmac = binascii.a2b_hex(mac)
     except:
         return []
 
-    res = []
-
-    if len(mac) == 6 and mac.startswith(b'\x00\x00\x5e'): # IANA
+    if len(bmac) == 6 and mac.startswith('00005E'): # IANA
         # https://www.iana.org/assignments/ethernet-numbers/ethernet-numbers.xhtml#ethernet-numbers-1
-        if mac[3] == 0:
-            if mac[4] == 1:   # 00-00-5E-00-01-xx
-                res.append('IPv4 VRRP')
-            elif mac[4] == 2:
-                res.append('IPv6 VRRP')
+        if bmac[3] == 0:
+            if bmac[4] == 1:   # 00-00-5E-00-01-xx
+                extra.append('IPv4 VRRP')
+            elif bmac[4] == 2:
+                extra.append('IPv6 VRRP')
             else:
                 return []
 
-            res.append('id %d' % (mac[5],))
-
-    return res
+            extra.append('id %d' % (bmac[5],))
 
 def macvendorsLookup(wcb, mac_input):
     res = requests.get("https://api.macvendors.com/" + mac_input)
@@ -101,7 +99,6 @@ def OUILookup(wcb, mac_input):
 
     octets = mac_input.split(':')
 
-    print(octets)
     # prepend zero to octets that are only one nibble long
     for i in range(len(octets)):
         if len(octets[i]) == 1:
@@ -113,7 +110,8 @@ def OUILookup(wcb, mac_input):
     if len(mac_input) < 6:
         raise Exception("need at least 3 octets (got input %s)" % (mac_input,))
 
-    extra = OUItrySpecial(mac_input)
+    extra = []
+    OUItrySpecial(mac_input, extra)  # this may append to `extra`
 
     mac_input = mac_input[:6]
 
