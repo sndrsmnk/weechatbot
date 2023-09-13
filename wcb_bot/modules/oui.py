@@ -3,6 +3,7 @@ import json
 import random
 import binascii
 import time
+import re
 
 from collections import namedtuple
 
@@ -94,9 +95,23 @@ def actualOUILookup(wcb, mac_input):
         return 'please set oui_backend to "macvendors" or "nmap"'
 
 def OUILookup(wcb, mac_input):
+    mac_input = mac_input.upper()
+    mac_input = mac_input.replace('-', ':')
+    mac_input = re.sub('[^A-F0-9:]', '', mac_input)
+
+    octets = mac_input.split(':')
+
+    print(octets)
+    # prepend zero to octets that are only one nibble long
+    for i in range(len(octets)):
+        if len(octets[i]) == 1:
+            octets[i] = '0' + octets[i]
+
+    mac_input = ''.join(octets)
+
     mac_input = mac_input.replace('-', '').replace(':', '').upper()
     if len(mac_input) < 6:
-        raise Exception("need at least 3 octets")
+        raise Exception("need at least 3 octets (got input %s)" % (mac_input,))
 
     extra = OUItrySpecial(mac_input)
 
@@ -149,6 +164,11 @@ def test_lookup():
         wcb = namedtuple('state', ['state'])(dict(oui_backend=backend))
         for oui, res in [
             ('009069', ['Juniper Networks']),
+            ('00:90:69', ['Juniper Networks']),
+            ('00-90-69', ['Juniper Networks']),
+            ('0090.69', ['Juniper Networks']),
+            ('0:90:69', ['Juniper Networks']),
+            ('0-90:69', ['Juniper Networks']),
             ('019069', ['Juniper Networks (multicast)']),
             ('00005E-00-02-01', ['Icann, Iana Department (IPv6 VRRP, id 1)', 'ICANN, IANA Department (IPv6 VRRP, id 1)']),
             ('0000:5E:00-01-55', ['Icann, Iana Department (IPv4 VRRP, id 85)', 'ICANN, IANA Department (IPv4 VRRP, id 85)']),
