@@ -27,9 +27,7 @@ class WeeChatBot:
     def __init__(self, weechat):
         self.weechat = weechat
         self.re = re
-
-        bot_output_buffer = self.weechat.buffer_new("WeeChatBot", "shim_wcb_handle_buffer_input", "", "", "")
-        self.buffer = bot_output_buffer
+        self.buffer = self.weechat.buffer_new("WeeChatBot", "shim_wcb_handle_buffer_input", "", "", "")
 
         bot_base = os.environ['HOME'] + '/.weechat/python/wcb_bot'
         self.udp_socket_open = False
