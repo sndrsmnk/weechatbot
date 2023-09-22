@@ -185,7 +185,7 @@ class WeeChatBot:
         if self.event['signal'] not in ['irc_in2_QUIT', 'irc_in2_INVITE']:
             reply_buffer = self.weechat.buffer_search("irc", '(?i)' + reply_buffer_name) # (?i) case insensitive
             if not reply_buffer:
-                dlog("Could not find reply_buffer for event: '%s'" % event)
+                dlog("Could not find reply_buffer for event: '%s'" % self.event)
             self.event['weechat_buffer'] = reply_buffer
 
         # If this is a JOIN event, update WeeChat internal state with gratouitous '/WHO' on the channel.
