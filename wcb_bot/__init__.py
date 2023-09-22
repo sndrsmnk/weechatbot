@@ -350,7 +350,7 @@ class WeeChatBot:
 
 
     def wcb_handle_hook_process_callback(self, callback_data, process, process_rc, process_stdout, process_stderr):
-        # Construct a event dict, assuming keys are copied from callback_data
+        # Construct an event dict, assuming keys are copied from callback_data
         self.event = {
             'process': process,
             'process_rc': process_rc,
