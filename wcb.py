@@ -24,6 +24,9 @@ def shim_wcb_handle_event(data, signal, signal_data):
 def shim_wcb_handle_timer_signal(data, remaining_calls):
     return bot.wcb_handle_timer_signal(data, remaining_calls)
 
+def wcb_hook_process_callback(callback_data, process, process_rc, process_stdout, process_stderr):
+    return bot.wcb_handle_hook_process_callback(callback_data, process, process_rc, process_stdout, process_stderr)
+
 def shim_wcb_unload():
     return bot.wcb_unload()
 
