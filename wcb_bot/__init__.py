@@ -133,120 +133,126 @@ class WeeChatBot:
 
     ''' WeeChat hooks and triggers '''
     def wcb_handle_event(self, data, signal, signal_data):
-        event = {}
-        event['server'], event['signal'] = signal.split(",")
+        self.event = {}
+        self.event['server'], self.event['signal'] = signal.split(",")
         if self.state['debug_event']:
             dlog("Event: %s" % signal)
         for k, v in self.weechat.info_get_hashtable("irc_message_parse", {"message": signal_data}).items():
-            event[k] = v
-        event['target_username'] = event['server'] + '.' + event['nick']
-        event['target_channel'] = event['server'] + '.' +  event['channel']
-        event['command'] = event['command_args'] = event['trigger'] = ''
-        event['nickmask'] = event['host']
-        res = self.re.match("^.*!(.*)", event['host'])
+            self.event[k] = v
+        self.event['target_username'] = self.event['server'] + '.' + self.event['nick']
+        self.event['target_channel'] = self.event['server'] + '.' +  self.event['channel']
+        self.event['command'] = self.event['command_args'] = self.event['trigger'] = ''
+        self.event['nickmask'] = self.event['host']
+        res = self.re.match("^.*!(.*)", self.event['host'])
         if res:
-            event['hostmask'] = res.group(1).lower()
+            self.event['hostmask'] = res.group(1).lower()
         else:
             # This is an IRCNet 'reop list' event, set the bot as originator for permission reasons.
-            if event['server'] == 'ircnet' and event['signal'] in ['irc_in2_344', 'irc_in2_345']: # XXX perhaps do this for all numeric irc_in2_NNN events?
-                event['hostmask'] = 'self@host'
-                event['nickmask'] = 'WeeChatBot!self@host'
-        del event['host']
+            if self.event['server'] == 'ircnet' and self.event['signal'] in ['irc_in2_344', 'irc_in2_345']: # XXX perhaps do this for all numeric irc_in2_NNN events?
+                self.event['hostmask'] = 'self@host'
+                self.event['nickmask'] = 'WeeChatBot!self@host'
+        del self.event['host']
 
         # Remove clutter
         for key in ['pos_arguments', 'pos_channel', 'pos_command', 'pos_text']:
-            event.pop(key, None)
+            self.event.pop(key, None)
 
         # Check for a "!command args" style event, set appropriate values.
-        re_trigger_result = self.re_trigger.search(event['text'])
-        re_command_result = self.re_command.search(event['text'])
+        re_trigger_result = self.re_trigger.search(self.event['text'])
+        re_command_result = self.re_command.search(self.event['text'])
         if re_trigger_result and re_command_result:
-            event['command'] = re_command_result.group(1)
-            event['command'] = event['command'].lower()
+            self.event['command'] = re_command_result.group(1)
+            self.event['command'] = self.event['command'].lower()
             if re_command_result.group(2):
-                event['command_args'] = re.sub('^\s+', '', re.sub('\s+$', '', re_command_result.group(2)))
+                self.event['command_args'] = re.sub('^\s+', '', re.sub('\s+$', '', re_command_result.group(2)))
 
+        # Find the WeeChat buffer for this event
+        self.find_buffer_for_event()
+
+        # Fetch the event originator's user info
+        self.event['user_info'] = self.db_get_userinfo_by_userhost(self.event['hostmask'])
+        return self.let_module_handle_event()
+
+
+    def find_buffer_for_event(self):
         # Find the correct reply buffer. If 'channel' for event does not
         # look like an IRC-channel it probably is a nickname (private message)
         # so adjust target accordingly.
-        reply_buffer_name = event['target_channel']
-        if not re.match('^[#&]', event['channel']):
-            reply_buffer_name = event['target_username']
+        reply_buffer_name = self.event['target_channel']
+        if not re.match('^[#&]', self.event['channel']):
+            reply_buffer_name = self.event['target_username']
 
         # Find the actual buffer, not all signals are associated with a single buffer, so we skip them.
-        event['weechat_buffer'] = False
-        if event['signal'] not in ['irc_in2_QUIT', 'irc_in2_INVITE']:
+        self.event['weechat_buffer'] = False
+        if self.event['signal'] not in ['irc_in2_QUIT', 'irc_in2_INVITE']:
             reply_buffer = self.weechat.buffer_search("irc", '(?i)' + reply_buffer_name) # (?i) case insensitive
             if not reply_buffer:
                 dlog("Could not find reply_buffer for event: '%s'" % event)
-            event['weechat_buffer'] = reply_buffer
+            self.event['weechat_buffer'] = reply_buffer
 
-        # If this is a JOIN event, update WeeChat internal state with gratouitous '/WHO' on the channel
-        if event['signal'] == 'irc_in2_JOIN':
-            self.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
+        # If this is a JOIN event, update WeeChat internal state with gratouitous '/WHO' on the channel.
+        # We need to do this here, so the next bot_nick and related info is accurate.
+        if self.event['signal'] == 'irc_in2_JOIN':
+            self.weechat.command(self.event['weechat_buffer'], '/who ' + self.event['channel'])
 
         # Find our name on the event's buffer
-        event['bot_nick'] = 'no_event_buffer'
-        if event['weechat_buffer']:
+        self.event['bot_nick'] = 'no_event_buffer'
+        if self.event['weechat_buffer']:
             for t in [('bot_nick', 'localvar_nick'), ('bot_hostmask', 'localvar_host')]:
-                value = self.weechat.buffer_get_string(event['weechat_buffer'], t[1])
-                event[t[0]] = value
+                value = self.weechat.buffer_get_string(self.event['weechat_buffer'], t[1])
+                self.event[t[0]] = value
 
-            if 'bot_hostmask' in event:
-                event['bot_nickmask'] = event['bot_nick'] + '!' + event['bot_hostmask']
+            if 'bot_hostmask' in self.event:
+                self.event['bot_nickmask'] = self.event['bot_nick'] + '!' + self.event['bot_hostmask']
             else:
                 dlog("Could not find our own nick/host on buffer?")
                 self.debug_event(event)
-                event['bot_nick'] = 'undef'
-                event['bot_hostmask'] = 'undef@undef.undef'
-                event['bot_nickmask'] = 'undef!undef@undef.undef'
+                self.event['bot_nick'] = 'undef'
+                self.event['bot_hostmask'] = 'undef@undef.undef'
+                self.event['bot_nickmask'] = 'undef!undef@undef.undef'
 
             self.weechat.infolist_free(value)
 
         # Check if bot is op on event's channel.
-        event['bot_is_op'] = False
-        infolist = self.weechat.infolist_get('irc_nick', '', '%s,%s' % (event['server'], event['channel']))
+        self.event['bot_is_op'] = False
+        infolist = self.weechat.infolist_get('irc_nick', '', '%s,%s' % (self.event['server'], self.event['channel']))
         while self.weechat.infolist_next(infolist):
             nick = self.weechat.infolist_string(infolist, 'name')
-            if nick != event['bot_nick']:
+            if nick != self.event['bot_nick']:
                 continue
             if '@' in self.weechat.infolist_string(infolist, 'prefix'):
-                event['bot_is_op'] = True
+                self.event['bot_is_op'] = True
                 break
-
-        # Fetch the event originator's user info
-        event['user_info'] = self.db_get_userinfo_by_userhost(event['hostmask'])
-        self.event = event
-        return self.let_module_handle_event(event)
+        return
 
 
-    def let_module_handle_event(self, event, handle_event_silently=False):
+    def let_module_handle_event(self, handle_event_silently=False):
         # Log the event!
         if self.state['debug_event']:
-            self.debug_event(event)
+            self.debug_event()
 
         # Look for modules to handle this event.
         event_command_handled = 0
-        event['trigger'] = ''
+        self.event['trigger'] = ''
         run_modules = []
 
         # First try finding modules that trigger by a command
         for module in list(self.modules):
-            if event['command'] in self.modules[module]['commands']:
+            if self.event['command'] in self.modules[module]['commands']:
                 if not self.perms(self.modules[module]['permissions']):
                     dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
                     continue
-                event['trigger'] = 'command'
+                self.event['trigger'] = 'command'
                 run_modules.append(module)
 
         # Then look for modules that trigger on events
         if not run_modules:
             for module in list(self.modules):
-                if event['signal'] in self.modules[module]['events']:
+                if self.event['signal'] in self.modules[module]['events']:
                     if not self.perms(self.modules[module]['permissions']):
                         dlog("Moduile '%s' would handle this event but permissions mismatch." % module)
                         continue
-                    event['trigger'] = 'event'
+                    self.event['trigger'] = 'event'
                     run_modules.append(module)
 
         # If no module was found, just return OK
@@ -256,11 +262,11 @@ class WeeChatBot:
         # Multiple modules can claim a command or event. Event is more likely.
         for run_module in run_modules:
             if not handle_event_silently or self.state['debug_event'] is True:
-                dlog("Module '%s' handles '%s' by '%s' method." % (run_module, event['signal'], event['trigger']))
+                dlog("Module '%s' handles '%s' by '%s' method." % (run_module, self.event['signal'], self.event['trigger']))
 
             module_return_state = self.signal_cont
             try:
-                module_return_state = self.modules[run_module]['object'].run(self, event)
+                module_return_state = self.modules[run_module]['object'].run(self, self.event)
                 if not module_return_state:
                     module_return_state = self.signal_cont
             except Exception as err:
@@ -272,7 +278,7 @@ class WeeChatBot:
                 frame = exc_traceback.tb_frame
                 mod_name = os.path.basename(frame.f_code.co_filename)[:-3]
                 rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
-                if event['weechat_buffer']:
+                if self.event['weechat_buffer']:
                     self.say(rtxt)
                 return dlog(rtxt)
 
@@ -281,18 +287,18 @@ class WeeChatBot:
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
         # unless someone types !!!! for example.
-        text_has_double_trigger_char = self.re_trigger.search(event['text'][1:])
-        if 'infoitem' in self.modules and not text_has_double_trigger_char and not event['trigger'] == 'command':
-            event['text'] += "?"
-            event['trigger'] = 'event'
-            event['infoitem_auto_lookup_quiet'] = True
-            self.modules['infoitem']['object'].run(self, event)
+        text_has_double_trigger_char = self.re_trigger.search(self.event['text'][1:])
+        if 'infoitem' in self.modules and not text_has_double_trigger_char and not self.event['trigger'] == 'command':
+            self.event['text'] += "?"
+            self.event['trigger'] = 'event'
+            self.event['infoitem_auto_lookup_quiet'] = True
+            self.modules['infoitem']['object'].run(self, self.event)
 
         return self.weechat.WEECHAT_RC_OK
 
 
     def wcb_handle_timer_signal(self, data, remaining_calls):
-        timer_signal = {
+        self.event = {
             'data': data,
             'remaining_calls': remaining_calls,
 
@@ -318,8 +324,68 @@ class WeeChatBot:
             'user_info': None,
             'weechat_buffer': None
         }
-        self.event = timer_signal
-        return self.let_module_handle_event(timer_signal, handle_event_silently=True)
+        return self.let_module_handle_event(handle_event_silently=True)
+
+
+    def hook_process(self, fn_or_cmd, timeout):
+        """ Save some state from the event that led to this hook_process
+        call so the call back event is able to route back messages.
+        WeeChat can only pass a string around, so we'll use JSON. We
+        need to copy data from the original event: simply dumps()'ing
+        the entire self.event dict doesn't work as for example
+        self.event['weechat_buffer'] is not representable in JSON.
+        """
+        callback_event = {
+            'server': self.event['server'],
+            'channel': self.event['channel'],
+            'nick': self.event['nick'],
+            'nickmask': self.event['nickmask'],
+            'hostmask': self.event['hostmask'],
+            'target_channel': self.event['target_channel'],
+            'target_username': self.event['target_username'],
+            'user': self.event['user'],
+            'command': self.event['command'],
+            'command_args': self.event['command_args'],
+        }
+        self.weechat.hook_process(fn_or_cmd, timeout, "wcb_hook_process_callback", json.dumps(callback_event))
+        return self.weechat.WEECHAT_RC_OK
+
+
+    def wcb_handle_hook_process_callback(self, callback_data, process, process_rc, process_stdout, process_stderr):
+        # Construct a event dict, assuming keys are copied from callback_data
+        self.event = {
+            'process': process,
+            'process_rc': process_rc,
+            'process_stdout': process_stdout,
+            'process_stderr': process_stderr,
+
+            'arguments': '',
+            'message_without_tags': ':WeeChatBot!self@host HOOKPROCESSCALLBACK '
+                                    ':Hook process callback event',
+            'signal': 'hook_process_callback',
+            'tags': '',
+            'text': '',
+            'trigger': '',
+            'user': '',
+            'user_info': None,
+            'weechat_buffer': None
+        }
+
+        # Copy over the callback_data provided event info
+        callback_data_dict = json.loads(callback_data)
+        for key in callback_data_dict:
+            self.event[key] = callback_data_dict[key]
+
+        # Try to find a matching buffer for this callback
+        self.find_buffer_for_event()
+        # Try to find matching user_info for this callback
+        self.event['user_info'] = self.db_get_userinfo_by_userhost(self.event['hostmask'])
+
+        # Catch hook errors
+        if self.event['process_rc'] == wcb.weechat.WEECHAT_HOOK_PROCESS_ERROR:
+            return wcb.say("Error with command '%s'" % self.event['process'])
+
+        return self.let_module_handle_event(handle_event_silently=True)
 
 
     def wcb_handle_buffer_input(self, data, buffer, input_data):
@@ -655,9 +721,9 @@ class WeeChatBot:
 
 
     ''' Functions useful to modules '''
-    def debug_event(self, event):
+    def debug_event(self):
         pp = pprint.PrettyPrinter(indent=4)
-        dlog("Event:\n%s" % pp.pformat(event))
+        dlog("Event:\n%s" % pp.pformat(self.event))
 
     def mlog(self, message):
         caller = inspect.getouterframes(inspect.currentframe(), 2)[1][1]
