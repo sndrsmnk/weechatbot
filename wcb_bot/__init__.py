@@ -383,8 +383,8 @@ class WeeChatBot:
 
         # Catch hook errors
         if self.event['process_rc'] == wcb.weechat.WEECHAT_HOOK_PROCESS_ERROR:
-            return wcb.say("Error with command '%s'" % self.event['process'])
-
+            dlog("hook_process error with command '%s'" % self.event['process'])
+            return wcb.say("hook_process error with command '%s'" % self.event['process'])
         return self.let_module_handle_event(handle_event_silently=True)
 
 
