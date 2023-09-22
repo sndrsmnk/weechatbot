@@ -9,6 +9,7 @@ import socket
 import weechat
 import inspect
 import psycopg2
+import tempfile
 import traceback
 import importlib.util
 import psycopg2.extras
@@ -344,7 +345,7 @@ class WeeChatBot:
     '''
     def setup_udp_listener(self):
         for key in ['udp_listen_ip', 'udp_listen_port', 'udp_listen_pass']:
-            if self.state[key] and self.state[key] == '':
+            if key in self.state and self.state[key] == '':
                 return dlog("UDP listener disabled: missing '%s' setting" % key)
         if self.udp_socket_open == True:
             self.udp_socket.close()
@@ -435,11 +436,12 @@ class WeeChatBot:
     ''' Functions pertaining to configuration files '''
     def save_obj_as_json(self, object, dstfile):
         try:
-            output = open(dstfile, 'w')
+            tmp = tempfile.NamedTemporaryFile(mode='w', delete=False, prefix='wcb_tmp_', suffix='.json')
+            tmp.write(json.dumps(object, sort_keys=True, indent=4))
+            tmp.close()
+            os.replace(tmp.name, dstfile)
         except Exception as e:
             return dlog("Can't write file '%s': %s" % (dstfile, e))
-        output.write(json.dumps(object, sort_keys=True, indent=4))
-        output.close()
         return True
 
 
