@@ -380,7 +380,7 @@ class WeeChatBot:
         self.event['user_info'] = self.db_get_userinfo_by_userhost(self.event['hostmask'])
 
         # Catch hook errors
-        if self.event['process_rc'] == wcb.weechat.WEECHAT_HOOK_PROCESS_ERROR:
+        if self.event['process_rc'] == self.weechat.WEECHAT_HOOK_PROCESS_ERROR:
             dlog("hook_process error with command '%s'" % self.event['process'])
             return wcb.say("hook_process error with command '%s'" % self.event['process'])
         return self.let_module_handle_event(handle_event_silently=True)
