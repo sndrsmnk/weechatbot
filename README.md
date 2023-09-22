@@ -3,7 +3,7 @@ WeechatBot
 This is an IRC bot implementation built with Weechat Python scripting.<br/>
 (c) 2020 GPLv2+ - There may be dragons.
 
-You may need some or all of these Ubuntu packages: weechat, python3-psycopg2, python3-pycurl, python3-iso3166
+You may need some or all of these Ubuntu packages: weechat python3-psycopg2 python3-pycurl python3-iso3166
 
 Disclaimer: i have no idea what i'm doing. This could be implemented much more betterer.
 
@@ -12,7 +12,7 @@ Quick install guide:
  * This needs a PostgreSQL database. Schema is in `$GITHOME/dbschema.psql`.
 
  * Create a new user '**weechatbot**' (or joe, polly or finnigan...)
- * Start weechat 2.8+, Python 3+, quit weechat. This creates ~/.weechat/
+ * Start weechat >= 2.8, Python >= 3.3, quit weechat. This creates ~/.weechat/
 
  * Checkout this repo in $HOME
 ```sh
@@ -68,4 +68,3 @@ If the bot is on multiple networks with the same channelname, you can specify th
 ```sh
 $ echo "s00p3rzeeKRiT! ircnet #testchan Test message on ircnet via UDP" | nc -q1 -u 127.0.0.1 47774
 ```
-
