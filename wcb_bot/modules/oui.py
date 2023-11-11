@@ -151,7 +151,7 @@ def run(wcb, event):
     mac_input = event['command_args']
 
     # pass through infoitem define events
-    if " = " in mac_input:
+    if mac_input[:2] == "= ":
         return wcb.signal_cont
 
     if not mac_input or mac_input == '':
