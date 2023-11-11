@@ -149,6 +149,11 @@ def OUILookup(wcb, mac_input):
 
 def run(wcb, event):
     mac_input = event['command_args']
+
+    # pass through infoitem define events
+    if " = " in mac_input:
+        return wcb.signal_cont
+
     if not mac_input or mac_input == '':
         if event['command'] == "oui":
             repondre = [
