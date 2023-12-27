@@ -8,7 +8,7 @@ def config(wcb):
         'events': [],
         'commands': ['fipo', 'fipostats', 'fiporeset', 'fiposet', 'setfipo'],
         'permissions': ['user', 'fipo'],
-        'help': "Scores you that sweet-sweet fipo fame! Disabled by default, enable per channel with '!chan-perm add fipo'."
+        'help': "Scores you that sweet-sweet fipo fame! Disabled by default, bot owner can enable per channel with '!chan-perm add fipo'."
     }
 
 
