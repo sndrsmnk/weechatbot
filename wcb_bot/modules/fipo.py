@@ -7,13 +7,13 @@ def config(wcb):
     return {
         'events': [],
         'commands': ['fipo', 'fipostats', 'fiporeset', 'fiposet', 'setfipo'],
-        'permissions': ['user'],
-        'help': "Scores you that sweet-sweet fipo fame!"
+        'permissions': ['user', 'fipo'],
+        'help': "Scores you that sweet-sweet fipo fame! Disabled by default, enable per channel with '!chan-perm add fipo'."
     }
 
 
 def run(wcb, event):
-    if wcb.state.get('fipo_disabled', False):
+    if not wcb.perms('fipo', explicit=True):
         return
 
     fdb_file = "%s/module_fipo.sqlite3" % wcb.state['bot_base']
