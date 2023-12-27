@@ -17,8 +17,9 @@ def run(wcb, event):
         mode = args_arr.pop(0)
 
     channel = wcb.event['channel']
-    if wcb.re.match('^[#&]', args_arr[-1]):
-        channel = args_arr.pop(-1)
+    if len(args_arr) > 1:
+        if wcb.re.match('^[#&]', args_arr[-1]):
+            channel = args_arr.pop(-1)
 
     # args_arr should now only hold permissions to set
 
