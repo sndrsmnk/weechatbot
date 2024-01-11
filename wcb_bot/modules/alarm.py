@@ -42,6 +42,7 @@ def alarm_add(wcb, event):
     re_yyyymmddhhmm = re.compile(r'^(\d{4})-(\d{1,2})-(\d{1,2})\s(\d{1,2}:\d{2})(?::\d{2})?\s(.*)')
 
     res = re.match(re_hhmm, event['command_args'])
+    specific_date = False
     if res:
         alarm_date_obj = parse(res.group(1))
         alarm_text = res.group(2)
@@ -55,6 +56,7 @@ def alarm_add(wcb, event):
         yy = datetime.now().year
         dstr = "%s-%s-%s %s" % (mm, dd, yy, hhmm)
         alarm_date_obj = parse(dstr)
+        specific_date = True
 
     res = re.match(re_ddmmyyyyhhmm, event['command_args'])
     if res:
@@ -65,6 +67,7 @@ def alarm_add(wcb, event):
         alarm_text = res.group(5)
         dstr = "%s-%s-%s %s" % (mm, dd, yyyy, hhmm)
         alarm_date_obj = parse(dstr)
+        specific_date = True
 
     res = re.match(re_yyyymmddhhmm, event['command_args'])
     if res:
@@ -75,12 +78,15 @@ def alarm_add(wcb, event):
         alarm_text = res.group(5)
         dstr = "%s-%s-%s %s" % (mm, dd, yyyy, hhmm)
         alarm_date_obj = parse(dstr)
+        specific_date = True
 
     if not alarm_date_obj:
         wcb.say('Parsing of time failed. Usage: alarm <when> <text>')
         return wcb.say('<when> can be: HH:MM, dd-mm HH:MM, dd-mm-yyyy HH:MM, yyyy-mm-dd HH:MM')
 
-    if alarm_date_obj < now_date_obj:
+    if specific_date and alarm_date_obj < now_date_obj:
+        return wcb.reply("that date is in the past. Sorry!")
+    elif alarm_date_obj < now_date_obj:
         wcb.say("We're already past '%s', assuming tomorrow." % alarm_date_obj)
         alarm_date_obj = alarm_date_obj + timedelta(days=1)
     
