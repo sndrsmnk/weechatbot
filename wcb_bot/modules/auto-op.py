@@ -11,6 +11,9 @@ def run(wcb, event):
     if not event['bot_is_op']:
         return wcb.mlog("Bot is not opped on channel '%s'. Can't auto-op/auto-voice." % event['channel'])
 
+    if wcb.perms('dno'):
+        return
+
     tgtNick = event['nick']
     if event['command_args']:
         tgtNick = event['command_args'].split(' ')[0]

@@ -1,5 +1,6 @@
 import html
 import time
+import gzip
 import pycurl
 from io import BytesIO 
 
@@ -38,6 +39,12 @@ def run(wcb, event):
         # silently rewrite
         if 'music.youtube' in url:
             url = url.replace('music.youtube', 'www.youtube')
+
+        if 'https://twitter.com' in url:
+            url = url.replace('https://twitter.com', 'https://nitter.net')
+
+        if 'https://x.com' in url:
+            url = url.replace('https://x.com', 'https://nitter.net')
 
         if urls[channel]['url'] != url:
             urls[channel]['url'] = url
@@ -92,14 +99,21 @@ def fetchURLinfo(wcb, url):
     if not wcb.re.match("^https?://", url):
         url = 'https://' + url
 
+    req_headers = [
+        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language: en-US,en;q=0.6',
+        'Accept-Encoding: gzip',
+    ]
+
     b = BytesIO() 
     c = pycurl.Curl() 
     c.setopt(c.URL, url)
     c.setopt(c.FOLLOWLOCATION, 1)
-    c.setopt(c.CONNECTTIMEOUT, 2)
-    c.setopt(c.TIMEOUT, 2)
+    c.setopt(c.CONNECTTIMEOUT, 4)
+    c.setopt(c.TIMEOUT, 4)
     c.setopt(c.MAXREDIRS, 5)
-    c.setopt(c.USERAGENT, 'Mozilla')
+    c.setopt(c.USERAGENT, 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+    c.setopt(pycurl.HTTPHEADER, req_headers)
     c.setopt(c.WRITEFUNCTION, b.write)
     c.setopt(c.HEADERFUNCTION, __pycurl_headerfn)
     c.perform() 
@@ -123,6 +137,12 @@ def fetchURLinfo(wcb, url):
 
     body = b.getvalue()
     b.close()
+
+    try:
+        nbody = gzip.decompress(body)
+        body = nbody
+    except Exception as err:
+        pass
 
     try:
         body = body.decode(encoding)
