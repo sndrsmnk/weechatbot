@@ -345,7 +345,7 @@ class WeeChatBot:
             'command': self.event['command'],
             'command_args': self.event['command_args'],
         }
-        self.weechat.hook_process(fn_or_cmd, timeout, "wcb_hook_process_callback", json.dumps(callback_event))
+        self.weechat.hook_process(fn_or_cmd, timeout, "shim_wcb_hook_process_callback", json.dumps(callback_event))
         return self.weechat.WEECHAT_RC_OK
 
 
