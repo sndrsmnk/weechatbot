@@ -614,7 +614,7 @@ class WeeChatBot:
         tuserhost = ''
         while self.weechat.infolist_next(infolist):
             nick = self.weechat.infolist_string(infolist, 'name')
-            if nick != tnick:
+            if nick.lower() != tnick.lower():
                 continue
             host = self.weechat.infolist_string(infolist, 'host')
             if host == '':
@@ -780,7 +780,7 @@ class WeeChatBot:
         tuserhost = None
         while self.weechat.infolist_next(infolist):
             nick = self.weechat.infolist_string(infolist, 'name')
-            if nick != tnick:
+            if nick.lower() != tnick.lower():
                 continue
             host = self.weechat.infolist_string(infolist, 'host')
             if host == '':
