@@ -71,7 +71,8 @@ def run(wcb, event):
             urls[channel]['info'] = fetchURLinfo(wcb, last_url)
             urls[channel]['updated'] = int(time.time())
         except Exception as e:
-            return wcb.say("URL info error: '%s'" % e)
+            wcb.say("URL info error: '%s'" % e)
+            return wcb.signal_stop
     else:
         rtxt_postfix = "(cached,ttl:%ds)" % ttl
 
