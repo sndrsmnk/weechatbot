@@ -137,6 +137,7 @@ class WeeChatBot:
             dlog("Event: %s" % signal)
         for k, v in self.weechat.info_get_hashtable("irc_message_parse", {"message": signal_data}).items():
             self.event[k] = v
+        self.event['channel'] = self.event['channel'].lower()
         self.event['target_username'] = self.event['server'] + '.' + self.event['nick']
         self.event['target_channel'] = self.event['server'] + '.' +  self.event['channel']
         self.event['command'] = self.event['command_args'] = self.event['trigger'] = ''
