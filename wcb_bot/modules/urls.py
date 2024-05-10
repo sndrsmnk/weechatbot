@@ -40,12 +40,6 @@ def run(wcb, event):
         if 'music.youtube' in url:
             url = url.replace('music.youtube', 'www.youtube')
 
-        if 'https://twitter.com' in url:
-            url = url.replace('https://twitter.com', 'https://nitter.net')
-
-        if 'https://x.com' in url:
-            url = url.replace('https://x.com', 'https://nitter.net')
-
         if urls[channel]['url'] != url:
             urls[channel]['url'] = url
             urls[channel]['info'] = {}
