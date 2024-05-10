@@ -44,7 +44,7 @@ def run(wcb, event):
             sql = "INSERT INTO fipo (date, channel, username) VALUES (?, ?, ?)"
             cur.execute(sql, (todaystr, event['channel'], event['user_info']['username']))
             fdb.commit()
-            return wcb.say("w00t! :D")
+            return wcb.say(f"w00t, {event['user_info']['username']}! :D")
 
         if res[0] == event['user_info']['username']:
             return wcb.say("Yes! :D  It was YOU!  YOU SCORED TODAY'S FIPO!!  \\o/")
