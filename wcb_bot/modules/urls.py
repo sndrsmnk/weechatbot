@@ -146,8 +146,10 @@ def fetchURLinfo(wcb, url):
         return {'title': '', 'encoding': '', 'content-type': ''}
 
     title = '[title tag not found]'
-    res = wcb.re.search('<title[^>]*>(.+?)<\/title', body)
+    res = wcb.re.search('(?ims)<title[^>]*>(.+?)<\/title', body)
     if res:
         title = html.unescape(res.group(1))
+        title = wcb.re.sub('^\\s+', ' ', title, flags=wcb.re.MULTILINE).strip()
+        title = wcb.re.sub('[\r\n]', '', title, flags=wcb.re.MULTILINE).strip()
 
     return {'title': title, 'encoding': encoding, 'content-type': content_type}
