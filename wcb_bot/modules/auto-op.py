@@ -12,7 +12,6 @@ def run(wcb, event):
         return wcb.mlog("Bot is not opped on channel '%s'. Can't auto-op/auto-voice." % event['channel'])
 
     if not wcb.perms('owner') and wcb.perms('dno'):
-        wcb.say('ree')
         return
 
     tgtNick = event['nick']
