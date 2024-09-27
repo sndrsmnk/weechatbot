@@ -178,8 +178,10 @@ class WeeChatBot:
         # look like an IRC-channel it probably is a nickname (private message)
         # so adjust target accordingly.
         reply_buffer_name = self.event['target_channel']
+        self.event['is_privmsg'] = False
         if not re.match('^[#&]', self.event['channel']):
             reply_buffer_name = self.event['target_username']
+            self.event['is_privmsg'] = True
 
         # Find the actual buffer, not all signals are associated with a single buffer, so we skip them.
         self.event['weechat_buffer'] = False
