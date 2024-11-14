@@ -6,17 +6,29 @@ def config(wcb):
         'help': "Test"
     }
 
+def auto_op_timer_event(wcb, event):
+    return wcb.WEECHAT_RC_OK
+
 def run(wcb, event):
+    if event['signal'] == 'timer_signal':
+        return auto_op_timer_event(wcb, event)
+
     if not event['bot_is_op']:
-        return wcb.mlog("Bot is not opped on channel '%s'. Can't auto-op/auto-voice." % event['channel'])
+        return
 
     if not wcb.perms('owner') and (wcb.perms('dno') or wcb.perms('dnv')):
         return
 
     tgtNick = event['nick']
+    prefix = ''
+
     if event['command_args']:
         cmd = event['command']
         tgtNick = event['command_args'].split(' ')[0]
+        if cmd == 'op':
+            prefix = '@'
+        elif cmd == 'voice':
+            prefix = '+'
     else:
         if wcb.perms('auto-op'):
             cmd = 'op'
