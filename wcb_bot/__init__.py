@@ -5,6 +5,7 @@ import sys
 import json
 import random
 import pprint
+import shutil
 import socket
 import weechat
 import inspect
@@ -46,10 +47,10 @@ class WeeChatBot:
             'bot_uniqueid':  ''.join(random.sample('abcdefghijklmnopqrstuvwxyzABCFEFGHIJKLMNOPQRSTUVWXYZ1234567890', 8)),
             'bot_ownermask': '',
 
-            'bot_trigger_re': '^[!\.]',
+            'bot_trigger_re': r'^[!\.]',
 
             # This regexp must return the command and the 'arguments' via (grou)(ping)
-            'bot_command_re': '([-a-zA-Z0-9]+)(?:\s(.*)|$)',
+            'bot_command_re': r'([-a-zA-Z0-9]+)(?:\s(.*)|$)',
 
             # By default stuff like quotes, karma and infoitems are kept separate per channel.
             # '!set bot_shared_knowledge True' to disable and 'share the knowledge' between channels.
@@ -67,6 +68,8 @@ class WeeChatBot:
             'db_user': 'weechatbot',
             'db_pass': 'xyz',
             'db_name': 'weechatbot',
+
+            'max_output_lines': 3,
         }
 
         for path in (self.state['bot_base'], self.state['bot_modules']):
@@ -105,6 +108,10 @@ class WeeChatBot:
 
         self.setup_udp_listener()
 
+        # This setting was introduced later and will break existing installs on "upgrade".
+        if 'max_output_lines' not in self.state:
+            self.state['max_output_lines'] = 3
+
         self.save_obj_as_json(self.state, self.state['bot_config'])
 
         weechat.hook_signal("*,irc_in2_privmsg",  "shim_wcb_handle_event",     "")
@@ -132,6 +139,7 @@ class WeeChatBot:
     ''' WeeChat hooks and triggers '''
     def wcb_handle_event(self, data, signal, signal_data):
         self.event = {}
+        self.output = []
         self.event['server'], self.event['signal'] = signal.split(",")
         if self.state['debug_event']:
             dlog("Event: %s" % signal)
@@ -156,6 +164,16 @@ class WeeChatBot:
         for key in ['pos_arguments', 'pos_channel', 'pos_command', 'pos_text']:
             self.event.pop(key, None)
 
+        # Find the WeeChat buffer for this event
+        self.find_buffer_for_event()
+
+        # Deal with 'grep'-functionality.
+        if ' | grep ' in self.event['text']:
+            res = self.re.match(r'^(.*)\s\|\sgrep\s(.*)', self.event['text'])
+            self.event['orig_text'] = self.event['text']
+            self.event['text'] = res.group(1)
+            self.event['search_for'] = res.group(2)
+
         # Check for a "!command args" style event, set appropriate values.
         re_trigger_result = self.re_trigger.search(self.event['text'])
         re_command_result = self.re_command.search(self.event['text'])
@@ -163,10 +181,7 @@ class WeeChatBot:
             self.event['command'] = re_command_result.group(1)
             self.event['command'] = self.event['command'].lower()
             if re_command_result.group(2):
-                self.event['command_args'] = re.sub('^\s+', '', re.sub('\s+$', '', re_command_result.group(2)))
-
-        # Find the WeeChat buffer for this event
-        self.find_buffer_for_event()
+                self.event['command_args'] = re.sub(r'^\s+', '', re.sub(r'\s+$', '', re_command_result.group(2)))
 
         # Fetch the event originator's user info
         self.event['user_info'] = self.db_get_userinfo_by_userhost(self.event['hostmask'])
@@ -224,6 +239,7 @@ class WeeChatBot:
             if '@' in self.weechat.infolist_string(infolist, 'prefix'):
                 self.event['bot_is_op'] = True
                 break
+        self.weechat.infolist_free(infolist)
         return
 
 
@@ -284,17 +300,73 @@ class WeeChatBot:
                 return dlog(rtxt)
 
             if module_return_state == self.signal_stop:
+                self.wcb_do_output()
                 return self.weechat.WEECHAT_RC_OK
 
         # Try event again as infoitem lookup (!foo?) when command and not handled
         # unless someone types !!!! for example.
         text_has_double_trigger_char = self.re_trigger.search(self.event['text'][1:])
         if 'infoitem' in self.modules and not text_has_double_trigger_char and not self.event['trigger'] == 'command':
+            if ' | grep ' in self.event['text']:
+                res = self.re.match(r'^(.*)\s\|\sgrep\s(.*)', self.event['text'])
+                self.event['orig_text'] = self.event['text']
+                self.event['text'] = res.group(1)
+                self.event['search_for'] = res.group(2)
             self.event['text'] += "?"
             self.event['trigger'] = 'event'
             self.event['infoitem_auto_lookup_quiet'] = True
             self.modules['infoitem']['object'].run(self, self.event)
 
+        self.wcb_do_output()
+        return self.weechat.WEECHAT_RC_OK
+
+
+    def wcb_do_output(self):
+        search_for = ''
+        if 'search_for' in self.event:
+            search_for = self.event['search_for']
+
+        real_output_lines = []
+        for output_dict in self.output:
+            if 'arr' in output_dict:
+                output_line = ''
+                for elem in output_dict['arr']:
+                    if search_for not in elem:
+                        continue
+                    output_line += f" .. {elem}"
+                output_line = output_line[4:] # strip leading ' .. '
+                output_dict['msg'] = output_line
+                output_dict.pop('arr', None)
+            else:
+                if search_for not in output_dict['msg']:
+                    continue
+            real_output_lines.append(output_dict)
+
+        did_output = False
+        force_private = False
+        if len(real_output_lines) > self.state['max_output_lines']:
+            self.weechat.command(self.event['weechat_buffer'], f"There's more than {self.state['max_output_lines']} lines of output, i'll message you privately.")
+            force_private = True
+
+        for line in real_output_lines:
+            if self.re.search(r'^\s*$', line['msg']):
+                continue
+            if force_private:
+                line['type'] = 'private'
+            if line['type'] == 'say':
+                self.weechat.command(self.event['weechat_buffer'], line['msg'])
+                did_output = True
+            elif line['type'] == 'private':
+                self.weechat.command(self.event['weechat_buffer'], '/msg %s %s' % (self.event['nick'], line['msg']))
+                did_output = True
+
+        if not did_output and 'search_for' in self.event:
+            if self.event['is_privmsg']:
+                self.weechat.command(self.event['weechat_buffer'], '/msg %s nothing matched your search criteria!' % (self.event['nick']))
+            else:
+                self.weechat.command(self.event['weechat_buffer'], 'nothing matched your search criteria!')
+
+        self.output = []
         return self.weechat.WEECHAT_RC_OK
 
 
@@ -486,6 +558,7 @@ class WeeChatBot:
                         dlog("Found channel '%s' in server '%s'" % (channel, irc_server_name))
                     self.weechat.infolist_free(servers)
                     return weechat.WEECHAT_RC_OK
+            self.weechat.infolist_free(servers)
             return dlog("Could not find '%s' buffer in any irc_server." % (channel))
 
         target = server + '.' + channel
@@ -506,7 +579,7 @@ class WeeChatBot:
             tmp = tempfile.NamedTemporaryFile(mode='w', delete=False, prefix='wcb_tmp_', suffix='.json')
             tmp.write(json.dumps(object, sort_keys=True, indent=4))
             tmp.close()
-            os.replace(tmp.name, dstfile)
+            shutil.move(tmp.name, dstfile)
         except Exception as e:
             return dlog("Can't write file '%s': %s" % (dstfile, e))
         return True
@@ -622,6 +695,7 @@ class WeeChatBot:
             host = self.weechat.infolist_string(infolist, 'host')
             if host == '':
                 self.say("Sorry, try that again?")
+                self.weechat.infolist_free(infolist)
                 return self.weechat.WEECHAT_RC_OK
             tuserhost = host
         self.weechat.infolist_free(infolist)
@@ -737,18 +811,25 @@ class WeeChatBot:
 
 
     def reply(self, message):
-        reply = "%s, %s" % (self.event['nick'], message)
-        self.weechat.command(self.event['weechat_buffer'], reply)
+        if type(message) == list:
+            self.output.append({'type': 'say', 'arr': message})
+        else:
+            reply = "%s, %s" % (self.event['nick'], message)
+            self.output.append({'type': 'say', 'msg': reply})
         return self.weechat.WEECHAT_RC_OK
-
 
     def say(self, message):
-        self.weechat.command(self.event['weechat_buffer'], message)
+        if type(message) == list:
+            self.output.append({'type': 'say', 'arr': message})
+        else:
+            self.output.append({'type': 'say', 'msg': message})
         return self.weechat.WEECHAT_RC_OK
 
-
     def private(self, message):
-        self.weechat.command(self.event['weechat_buffer'], '/msg %s %s' % (self.event['nick'], message))
+        if type(message) == list:
+            self.output.append({'type': 'private', 'arr': message})
+        else:
+            self.output.append({'type': 'private', 'msg': message})
         return self.weechat.WEECHAT_RC_OK
 
 
@@ -789,6 +870,7 @@ class WeeChatBot:
             if host == '':
                 self.weechat.command(self.event['weechat_buffer'], '/who ' + self.event['channel'])
                 self.say('OOPS: WeeChat stale data. Try again!')
+                self.weechat.infolist_free(infolist)
                 return self.weechat.WEECHAT_RC_OK
             tuserhost = host.lower()
         self.weechat.infolist_free(infolist)

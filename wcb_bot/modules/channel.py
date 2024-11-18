@@ -32,8 +32,7 @@ def run(wcb, event):
         name = wcb.weechat.infolist_string(infolist, 'name')
         author = wcb.weechat.infolist_string(infolist, 'author')
         if name == 'autojoin' and 'xt@bash.no' in author:
-            autojoin_enable = True
+            wcb.mlog("Found autojoin script loaded. Saving autojoin state.")
+            wcb.weechat.command(event['weechat_buffer'], '/autojoin --run')
             break
-    if autojoin_enable:
-        wcb.mlog("Found autojoin script loaded. Saving autojoin state.")
-        wcb.weechat.command(event['weechat_buffer'], '/autojoin --run')
+    wcb.weechat.infolist_free(infolist)

@@ -12,7 +12,7 @@ Quick install guide:
  * This needs a PostgreSQL database. Schema is in `$GITHOME/dbschema.psql`.
 
  * Create a new user '**weechatbot**' (or joe, polly or finnigan...)
- * Start weechat >= 2.8, Python >= 3.3, quit weechat. This creates ~/.weechat/
+ * Start weechat >= 2.8, Python >= 3.3, quit weechat. This creates the weechat configuration directories.
 
  * Checkout this repo in $HOME
 ```sh
@@ -22,12 +22,12 @@ $ git clone https://github.com/sndrsmnk/weechatbot.git
 
  * Set some symlinks for Weechat:
 ```sh
-$ ln -sf ~/weechatbot/wcb.py .weechat/python/wcb.py
-$ ln -sf ~/weechatbot/wcb_bot .weechat/python/wcb_bot
-$ ln -sf ~/.weechat/python/wcb.py ~/.weechat/python/autoload/wcb.py
+$ ln -sf ~/weechatbot/wcb.py .local/share/weechat/python/wcb.py
+$ ln -sf ~/weechatbot/wcb_bot .local/share/weechat/python/wcb_bot
+$ ln -sf .local/share/weechat/python/wcb.py .local/share/weechat/python/autoload/wcb.py
 ```
 
- * Start Weechat, fix WeeChatBot loading errors by installing missing dependencies
+ * Start Weechat, fix WeeChatBot loading errors by installing missing dependencies. This creates the `wcb_config.json` WeeChatBot configuration file.
 
  * Quit Weechat, edit `~/.weechat/python/wcb_bot/wcb_config.json` and update `db_*` info
 

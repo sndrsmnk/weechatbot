@@ -29,6 +29,7 @@ def run(wcb, event):
         if host == '':
             wcb.weechat.command(event['weechat_buffer'], '/who ' + event['channel'])
             wcb.say('OOPS: WeeChat stale data. Try again!')
+            wcb.weechat.infolist_free(infolist)
             return wcb.weechat.WEECHAT_RC_OK
         tuserhost = '%s!%s' %(nick, host)
         user_info = wcb.db_get_userinfo_by_userhost(tuserhost)

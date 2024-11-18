@@ -28,8 +28,7 @@ def do_search(wcb, event):
     if not len(matching_items_array):
         return wcb.say("No matching info items found for your search string.")
 
-    matching_items_str = " .. ".join(matching_items_array)
-    return wcb.say("These info items match your search string: %s" % matching_items_str)
+    return wcb.say(["These info items match your search string:"] + matching_items_array)
 
 
 def do_forget(wcb, event):
@@ -86,55 +85,14 @@ def run(wcb, event):
     if event['command'] in ['si', 'is', 'search-info', 'info-search']:
         return do_search(wcb, event)
 
-
     # Process 'non command' triggers here
     txt = event['text']
-
 
     # See if it is an attempt to define a thing?
     re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(?:define\s)?(.+?) = (.*)')
     res = re.match(txt)
     if res:
         return do_define(wcb, event)
-
-
-    # See if it is an attempt to grep through the defitions of a thing?
-    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?\s+\|\s+grep\s+(.*)')
-    res = re.match(txt)
-    if res:
-        pub_k = res.group(1)
-        db_k = res.group(1).lower()
-        grep_v = res.group(2)
-        if not grep_v:
-            return wcb.say("No value to grep for")
-
-        db = wcb.db_connect()
-        cur = db.cursor()
-
-        sql = "SELECT value FROM wcb_infoitems WHERE item = %s AND value ILIKE %s"
-        sql_args = [db_k, '%'+grep_v+'%']
-
-        if not wcb.state['bot_shared_knowledge']:
-            sql += " AND channel = %s"
-            sql_args.append(event['channel'])
-
-        sql += " ORDER BY insert_time ASC"
-
-        cur.execute(sql, sql_args)
-        res = cur.fetchall()
-        defstr = []
-        for val in res:
-            defstr.append(val[0])
-
-        retstr = " .. ".join(defstr)
-        if retstr == '':
-            if 'infoitem_auto_lookup_quiet' not in event:
-                wcb.say('grep for "%s" in "%s" yields no results or "%s" is not defined.' % (grep_v, pub_k, pub_k))
-            return wcb.signal_stop
-
-        wcb.say("matches: %s" % retstr)
-        return wcb.signal_stop
-
 
     # See if it is an attempt to get the definition of a thing?
     re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?\s*$')
@@ -162,15 +120,10 @@ def run(wcb, event):
         for val in res:
             defstr.append(val[0])
 
-        retstr = " .. ".join(defstr)
-        if retstr == '':
+        if not defstr:
             if 'infoitem_auto_lookup_quiet' not in event:
-                wcb.say('%s is not defined.' % pub_k)
+                wcb.say(f"{pub_k} is not defined.")
             return wcb.signal_stop
 
-        if numres > 20:
-            wcb.reply("there's a lot (%d) of definitions. I'll message them to you." % numres)
-            wcb.private("%s is %s" % (pub_k, retstr))
-        else:
-            wcb.say("%s is %s" % (pub_k, retstr))
+        wcb.say([f"{pub_k} is"] + defstr)
         return wcb.signal_stop
