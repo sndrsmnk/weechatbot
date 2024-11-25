@@ -344,7 +344,7 @@ class WeeChatBot:
 
         did_output = False
         force_private = False
-        if len(real_output_lines) > self.state['max_output_lines']:
+        if ('ignore_max_output_lines' not in self.event or not self.event['ignore_max_output_lines']) and len(real_output_lines) > self.state['max_output_lines']:
             self.weechat.command(self.event['weechat_buffer'], f"There's more than {self.state['max_output_lines']} lines of output, i'll message you privately.")
             force_private = True
 
@@ -810,26 +810,32 @@ class WeeChatBot:
         return self.weechat.WEECHAT_RC_OK
 
 
-    def reply(self, message):
+    def reply(self, message, immediate=False):
         if type(message) == list:
             self.output.append({'type': 'say', 'arr': message})
         else:
             reply = "%s, %s" % (self.event['nick'], message)
             self.output.append({'type': 'say', 'msg': reply})
+        if immediate:
+            self.wcb_do_output()
         return self.weechat.WEECHAT_RC_OK
 
-    def say(self, message):
+    def say(self, message, immediate=False):
         if type(message) == list:
             self.output.append({'type': 'say', 'arr': message})
         else:
             self.output.append({'type': 'say', 'msg': message})
+        if immediate:
+            self.wcb_do_output()
         return self.weechat.WEECHAT_RC_OK
 
-    def private(self, message):
+    def private(self, message, immediate=False):
         if type(message) == list:
             self.output.append({'type': 'private', 'arr': message})
         else:
             self.output.append({'type': 'private', 'msg': message})
+        if immediate:
+            self.wcb_do_output()
         return self.weechat.WEECHAT_RC_OK
 
 
