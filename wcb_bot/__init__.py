@@ -297,6 +297,7 @@ class WeeChatBot:
                 rtxt = "Error in %s line %s: %s" % (frame.f_code.co_filename, frame.f_lineno, err)
                 if self.event['weechat_buffer']:
                     self.say(rtxt)
+                    self.wcb_do_output()
                 return dlog(rtxt)
 
             if module_return_state == self.signal_stop:
