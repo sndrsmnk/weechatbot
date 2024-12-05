@@ -327,6 +327,9 @@ class WeeChatBot:
         if 'search_for' in self.event:
             search_for = self.event['search_for']
 
+        if not self.output:
+            return
+
         real_output_lines = []
         for output_dict in self.output:
             if 'arr' in output_dict:
