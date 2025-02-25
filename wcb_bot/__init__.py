@@ -361,7 +361,7 @@ class WeeChatBot:
             force_private = True
 
         if not self.state['ignore_max_output_line_length'] and max_line_length > self.state['max_output_line_length']:
-            self.weechat.command(self.event['weechat_buffer'], f"There's line(s) longer than {self.state['max_output_line_length']} charactres in the result(s), i'll message you privately.")
+            self.weechat.command(self.event['weechat_buffer'], f"There's line(s) longer than {self.state['max_output_line_length']} characters in the result(s), i'll message you privately.")
             force_private = True
 
         for line in real_output_lines:
