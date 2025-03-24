@@ -74,8 +74,8 @@ def run(wcb, event):
         if not pattern or pattern == '':
             return wcb.reply("please specify a search pattern.")
 
-        sql = "SELECT * FROM wcb_quotes WHERE quote SIMILAR TO %s"
-        sql_args = ['%'+pattern+'%']
+        sql = "SELECT * FROM wcb_quotes WHERE quote ~* %s"
+        sql_args = [pattern]
         if not wcb.state['bot_shared_knowledge']:
             sql += " AND channel = %s"
             sql_args.append(event['channel'])
