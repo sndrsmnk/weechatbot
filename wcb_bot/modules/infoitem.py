@@ -12,7 +12,7 @@ def do_search(wcb, event):
 
     db = wcb.db_connect()
     cur = db.cursor()
-    sql = "SELECT DISTINCT item FROM wcb_infoitems WHERE value LIKE %s"
+    sql = "SELECT DISTINCT item FROM wcb_infoitems WHERE value ILIKE %s"
     sql_args = ['%'+search_for+'%']
 
     if not wcb.state['bot_shared_knowledge']:
@@ -48,7 +48,7 @@ def do_forget(wcb, event):
 
     db = wcb.db_connect()
     cur = db.cursor()
-    sql = "DELETE FROM wcb_infoitems WHERE item = %s AND value LIKE %s"
+    sql = "DELETE FROM wcb_infoitems WHERE item = %s AND value ILIKE %s"
     sql_args = [db_k, '%%'+v+'%%']
     if not wcb.state['bot_shared_knowledge']:
         sql += " AND channel = %s"
