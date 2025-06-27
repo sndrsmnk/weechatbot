@@ -38,7 +38,7 @@ def run(wcb, event):
     cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
 
     # Check for a karma up / down event (eg, !foo++)
-    res = wcb.re.match("^(.+?)\s*(\+\+|\-\-)(?:\s*#\s*(.*))?", event_text)
+    res = wcb.re.match("^\s*(.+?)\s*(\+\+|\-\-)(?:\s*#\s*(.*))?", event_text)
     if res:
         item = res.group(1).lower()
         direction = res.group(2)
