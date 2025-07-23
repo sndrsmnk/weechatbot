@@ -63,7 +63,7 @@ def do_define(wcb, event):
     re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(?:define\s)?(.+?) = (.*)')
     res = re.match(event['text'])
     pub_k = res.group(1)
-    db_k = res.group(1).lower()
+    db_k = res.group(1).lower().strip()
     v = res.group(2)
 
     db = wcb.db_connect()
