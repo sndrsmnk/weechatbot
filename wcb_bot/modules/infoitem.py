@@ -9,6 +9,8 @@ def config(wcb):
 
 def do_search(wcb, event):
     search_for = event['command_args']
+    if not search_for:
+        return wcb.reply("!search-info expects (part of) a term to search for.")
 
     db = wcb.db_connect()
     cur = db.cursor()
