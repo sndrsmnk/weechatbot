@@ -9,7 +9,7 @@ def config(wcb):
 
 def run(wcb, event):
     args_txt = event['command_args']
-    args_txt = wcb.re.sub('\s{2,}', ' ', args_txt)
+    args_txt = wcb.re.sub(r'\s{2,}', ' ', args_txt)
     args_arr = args_txt.split(' ')
 
     mode = 'list'
@@ -18,7 +18,7 @@ def run(wcb, event):
 
     channel = wcb.event['channel']
     if len(args_arr) > 1:
-        if wcb.re.match('^[#&]', args_arr[-1]):
+        if wcb.re.match(r'^[#&]', args_arr[-1]):
             channel = args_arr.pop(-1)
 
     # args_arr should now only hold permissions to set
@@ -29,14 +29,14 @@ def run(wcb, event):
     if channel not in wcb.state['chan-perm']:
         wcb.state['chan-perm'][channel] = []
 
-    if wcb.re.match('(?:list|show)', mode):
+    if wcb.re.match(r'(?:list|show)', mode):
         counter = len(wcb.state['chan-perm'][channel])
         if not counter:
             return wcb.say("No global permissions on '%s'" % channel)
         return wcb.say("There's %s global permissions on '%s': %s" %
             (counter, channel, sorted(wcb.state['chan-perm'][channel])))
 
-    if wcb.re.match('(?:set|add)', mode):
+    if wcb.re.match(r'(?:set|add)', mode):
         counter = 0
         for permission in args_arr:
             if permission in wcb.state['chan-perm'][channel]:
@@ -47,7 +47,7 @@ def run(wcb, event):
         wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
         return wcb.say("Added %d global permissions to '%s'" % (counter, channel))
 
-    elif wcb.re.match('(?:rem(?:ove)?|del(?:ete)?)', mode):
+    elif wcb.re.match(r'(?:rem(?:ove)?|del(?:ete)?)', mode):
         counter = 0
         for permission in args_arr:
             if permission in wcb.state['chan-perm'][channel]:

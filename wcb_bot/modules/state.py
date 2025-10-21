@@ -16,7 +16,7 @@ def run(wcb, event):
         return wcb.say("Bot configuration saved!")
 
     if event['command'] == 'set-json':
-        res = wcb.re.match("^([^\s]+)[\s=]+(.*)", event['command_args'])
+        res = wcb.re.match(r"^([^\s]+)[\s=]+(.*)", event['command_args'])
         if not res:
             return wcb.say("Could not discern key, value from arguments: '%s'" % event['command_args'])
 
@@ -35,7 +35,7 @@ def run(wcb, event):
         return wcb.save_obj_as_json(wcb.state, wcb.state['bot_config'])
 
     if event['command'] == 'set':
-        res = wcb.re.match("^([^\s]+)[\s=]+(.*)", event['command_args'])
+        res = wcb.re.match(r"^([^\s]+)[\s=]+(.*)", event['command_args'])
         if not res:
             return wcb.say("Could not discern key, value from arguments: '%s'" % event['command_args'])
 

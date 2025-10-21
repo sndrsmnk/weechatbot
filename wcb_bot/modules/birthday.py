@@ -1,5 +1,5 @@
 import datetime
-import psycopg2.extras
+import psycopg2cffi.extras
 import re
 
 
@@ -14,7 +14,7 @@ def config(wcb):
 
 def bd_set(wcb, event):
     args = event['command_args']
-    re_ddmmyyyy = re.compile("^(\d{1,2})-(\d{1,2})-(\d{4})$")
+    re_ddmmyyyy = re.compile(r"^(\d{1,2})-(\d{1,2})-(\d{4})$")
     res = re.match(re_ddmmyyyy, args)
     if not res:
         return wcb.reply("usage 'bd-set dd-mm-yyyy'")

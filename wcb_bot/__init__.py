@@ -9,11 +9,11 @@ import shutil
 import socket
 import weechat
 import inspect
-import psycopg2
+import psycopg2cffi
 import tempfile
 import traceback
 import importlib.util
-import psycopg2.extras
+import psycopg2cffi.extras
 from datetime import datetime
 
 
@@ -30,7 +30,7 @@ class WeeChatBot:
         self.re = re
         self.buffer = self.weechat.buffer_new("WeeChatBot", "shim_wcb_handle_buffer_input", "", "", "")
 
-        bot_base = os.environ['HOME'] + '/.weechat/python/wcb_bot'
+        bot_base = os.environ['HOME'] + '/.local/share/weechat/python/wcb_bot'
         self.udp_socket_open = False
         self.modules = {}
 
@@ -387,6 +387,8 @@ class WeeChatBot:
 
 
     def wcb_handle_timer_signal(self, data, remaining_calls):
+        if 'output' not in self:
+            self.output = []
         self.event = {
             'data': data,
             'remaining_calls': remaining_calls,
@@ -441,6 +443,8 @@ class WeeChatBot:
 
 
     def wcb_handle_hook_process_callback(self, callback_data, process, process_rc, process_stdout, process_stderr):
+        if 'output' not in self:
+            self.output = []
         # Construct an event dict, assuming keys are copied from callback_data
         self.event = {
             'process': process,
@@ -523,7 +527,7 @@ class WeeChatBot:
 
         # Expect -at least- three words input
         # Password TargetChannel Message[..]
-        re_sult = re.match('^(\S+)\s+(\S+)\s+(.*)', str_data)
+        re_sult = re.match(r'^(\S+)\s+(\S+)\s+(.*)', str_data)
         if not re_sult:
             return dlog("UDP message from [%s]:%s not properly formed: '%s'" % (host, port, data))
 
@@ -548,7 +552,7 @@ class WeeChatBot:
         server = 'undef'
         if not re.match('^[#&]', channel):
             server = channel
-            re_sult = re.match('^(\S+)\s', message)
+            re_sult = re.match(r'^(\S+)\s', message)
             if not re_sult:
                 dlog("UDP message from [%s]:%s failed to properly parse: '%s'" % (host, port, str_data))
                 return self.weechat.WEECHAT_RC_ERROR
@@ -557,7 +561,7 @@ class WeeChatBot:
                 dlog("This '%s' does not look like a channel name" % channel)
                 dlog("UDP message from [%s]:%s failed to properly parse: '%s'" % (host, port, str_data))
                 return self.weechat.WEECHAT_RC_ERROR
-            message = re.sub('^(\S+)\s', '', message)
+            message = re.sub(r'^(\S+)\s', '', message)
 
         if self.state['debug_udp']:
             dlog("UDP message from [%s]:%s to '%s.%s': '%s'" % (host, port, server, channel, message))
@@ -690,12 +694,12 @@ class WeeChatBot:
     ''' Database related functions '''
     def db_connect(self):
         try:
-            pg_conn = psycopg2.connect(user = self.state['db_user'],
+            pg_conn = psycopg2cffi.connect(user = self.state['db_user'],
                         password = self.state['db_pass'],
                         host = self.state['db_host'],
                         port = self.state['db_port'],
                         dbname = self.state['db_name'])
-        except (Exception, psycopg2.Error) as err:
+        except (Exception, psycopg2cffi.Error) as err:
             return dlog("Error while connecting to PostgreSQL: %s" % err)
         return pg_conn
 
@@ -723,7 +727,7 @@ class WeeChatBot:
         host = host.lower()
 
         db = self.db_connect()
-        cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
         sql = "SELECT h.hostmask AS current_hostmask, u.* FROM wcb_hostmasks h, wcb_users u WHERE h.users_id = u.id AND h.hostmask = %s"
         cur.execute(sql, (host,))
@@ -769,7 +773,7 @@ class WeeChatBot:
         username = username.lower()
 
         db = self.db_connect()
-        cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
         sql = "SELECT h.hostmask AS current_hostmask, u.* FROM wcb_hostmasks h, wcb_users u WHERE h.users_id = u.id AND u.username = %s"
         cur.execute(sql, (username,))

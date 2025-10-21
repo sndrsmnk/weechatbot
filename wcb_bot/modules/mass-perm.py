@@ -9,7 +9,7 @@ def config(wcb):
 
 def run(wcb, event):
     args_txt = event['command_args']
-    args_txt = wcb.re.sub('\s{2,}', ' ', args_txt)
+    args_txt = wcb.re.sub(r'\s{2,}', ' ', args_txt)
     args_arr = args_txt.split(' ')
 
     if len(args_arr) < 2:

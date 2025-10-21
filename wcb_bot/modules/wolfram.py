@@ -90,7 +90,7 @@ def fetchURL(wcb, url):
     encoding = None
     if 'content-type' in headers:
         content_type = headers['content-type'].lower()
-        res = wcb.re.search('charset=(\S+)', content_type)
+        res = wcb.re.search(r'charset=(\S+)', content_type)
         if res:
             encoding = res.group(1)
     if encoding is None:
