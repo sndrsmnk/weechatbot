@@ -387,8 +387,7 @@ class WeeChatBot:
 
 
     def wcb_handle_timer_signal(self, data, remaining_calls):
-        if 'output' not in self:
-            self.output = []
+        self.output = []
         self.event = {
             'data': data,
             'remaining_calls': remaining_calls,
@@ -443,8 +442,7 @@ class WeeChatBot:
 
 
     def wcb_handle_hook_process_callback(self, callback_data, process, process_rc, process_stdout, process_stderr):
-        if 'output' not in self:
-            self.output = []
+        self.output = []
         # Construct an event dict, assuming keys are copied from callback_data
         self.event = {
             'process': process,
