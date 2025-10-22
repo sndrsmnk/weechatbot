@@ -111,12 +111,8 @@ class WeeChatBot:
         # These settings were introduced later on and will break existing installs on "upgrade".
         if 'max_output_lines' not in self.state:
             self.state['max_output_lines'] = 3
-        if 'ignore_max_output_lines' not in self.state:
-            self.state['ignore_max_output_lines'] = False
         if 'max_output_line_length' not in self.state:
             self.state['max_output_line_length'] = 200
-        if 'ignore_max_output_line_length' not in self.state:
-            self.state['ignore_max_output_line_length'] = False
 
         self.save_obj_as_json(self.state, self.state['bot_config'])
 
@@ -354,13 +350,17 @@ class WeeChatBot:
             max_line_length = len(output_dict['msg']) if len(output_dict['msg']) > max_line_length else max_line_length
             real_output_lines.append(output_dict)
 
+        if 'ignore_max_output_lines' not in self.event:
+            self.event['ignore_max_output_lines'] = False
+        if 'ignore_max_output_line_length' not in self.event:
+            self.event['ignore_max_output_line_length'] = False
         did_output = False
         force_private = False
-        if not self.state['ignore_max_output_lines'] and len(real_output_lines) > self.state['max_output_lines']:
+        if not self.event['ignore_max_output_lines'] and len(real_output_lines) > self.state['max_output_lines']:
             self.weechat.command(self.event['weechat_buffer'], f"There's more than {self.state['max_output_lines']} lines of output, i'll message you privately.")
             force_private = True
 
-        if not self.state['ignore_max_output_line_length'] and max_line_length > self.state['max_output_line_length']:
+        if not self.event['ignore_max_output_line_length'] and max_line_length > self.state['max_output_line_length']:
             self.weechat.command(self.event['weechat_buffer'], f"There's line(s) longer than {self.state['max_output_line_length']} characters in the result(s), i'll message you privately.")
             force_private = True
 
@@ -370,7 +370,9 @@ class WeeChatBot:
             if force_private:
                 line['type'] = 'private'
             if line['type'] == 'say':
-                self.weechat.command(self.event['weechat_buffer'], line['msg'])
+                # The \002\002 is IRC code for 'bold on/bold off' and defangs line['msg']
+                # containing weechat slash-commands like /msg, /join or /part, etc...
+                self.weechat.command(self.event['weechat_buffer'], '\002\002' + line['msg'])
                 did_output = True
             elif line['type'] == 'private':
                 self.weechat.command(self.event['weechat_buffer'], '/msg %s %s' % (self.event['nick'], line['msg']))
