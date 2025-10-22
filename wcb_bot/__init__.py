@@ -9,11 +9,11 @@ import shutil
 import socket
 import weechat
 import inspect
-import psycopg2
+import psycopg2cffi
 import tempfile
 import traceback
 import importlib.util
-import psycopg2.extras
+import psycopg2cffi.extras
 from datetime import datetime
 
 
@@ -30,7 +30,7 @@ class WeeChatBot:
         self.re = re
         self.buffer = self.weechat.buffer_new("WeeChatBot", "shim_wcb_handle_buffer_input", "", "", "")
 
-        bot_base = os.environ['HOME'] + '/.weechat/python/wcb_bot'
+        bot_base = os.environ['HOME'] + '/.local/share/weechat/python/wcb_bot'
         self.udp_socket_open = False
         self.modules = {}
 
@@ -111,12 +111,8 @@ class WeeChatBot:
         # These settings were introduced later on and will break existing installs on "upgrade".
         if 'max_output_lines' not in self.state:
             self.state['max_output_lines'] = 3
-        if 'ignore_max_output_lines' not in self.state:
-            self.state['ignore_max_output_lines'] = False
         if 'max_output_line_length' not in self.state:
             self.state['max_output_line_length'] = 200
-        if 'ignore_max_output_line_length' not in self.state:
-            self.state['ignore_max_output_line_length'] = False
 
         self.save_obj_as_json(self.state, self.state['bot_config'])
 
@@ -354,13 +350,17 @@ class WeeChatBot:
             max_line_length = len(output_dict['msg']) if len(output_dict['msg']) > max_line_length else max_line_length
             real_output_lines.append(output_dict)
 
+        if 'ignore_max_output_lines' not in self.event:
+            self.event['ignore_max_output_lines'] = False
+        if 'ignore_max_output_line_length' not in self.event:
+            self.event['ignore_max_output_line_length'] = False
         did_output = False
         force_private = False
-        if not self.state['ignore_max_output_lines'] and len(real_output_lines) > self.state['max_output_lines']:
+        if not self.event['ignore_max_output_lines'] and len(real_output_lines) > self.state['max_output_lines']:
             self.weechat.command(self.event['weechat_buffer'], f"There's more than {self.state['max_output_lines']} lines of output, i'll message you privately.")
             force_private = True
 
-        if not self.state['ignore_max_output_line_length'] and max_line_length > self.state['max_output_line_length']:
+        if not self.event['ignore_max_output_line_length'] and max_line_length > self.state['max_output_line_length']:
             self.weechat.command(self.event['weechat_buffer'], f"There's line(s) longer than {self.state['max_output_line_length']} characters in the result(s), i'll message you privately.")
             force_private = True
 
@@ -370,7 +370,9 @@ class WeeChatBot:
             if force_private:
                 line['type'] = 'private'
             if line['type'] == 'say':
-                self.weechat.command(self.event['weechat_buffer'], line['msg'])
+                # The \002\002 is IRC code for 'bold on/bold off' and defangs line['msg']
+                # containing weechat slash-commands like /msg, /join or /part, etc...
+                self.weechat.command(self.event['weechat_buffer'], '\002\002' + line['msg'])
                 did_output = True
             elif line['type'] == 'private':
                 self.weechat.command(self.event['weechat_buffer'], '/msg %s %s' % (self.event['nick'], line['msg']))
@@ -387,6 +389,7 @@ class WeeChatBot:
 
 
     def wcb_handle_timer_signal(self, data, remaining_calls):
+        self.output = []
         self.event = {
             'data': data,
             'remaining_calls': remaining_calls,
@@ -441,6 +444,7 @@ class WeeChatBot:
 
 
     def wcb_handle_hook_process_callback(self, callback_data, process, process_rc, process_stdout, process_stderr):
+        self.output = []
         # Construct an event dict, assuming keys are copied from callback_data
         self.event = {
             'process': process,
@@ -523,7 +527,7 @@ class WeeChatBot:
 
         # Expect -at least- three words input
         # Password TargetChannel Message[..]
-        re_sult = re.match('^(\S+)\s+(\S+)\s+(.*)', str_data)
+        re_sult = re.match(r'^(\S+)\s+(\S+)\s+(.*)', str_data)
         if not re_sult:
             return dlog("UDP message from [%s]:%s not properly formed: '%s'" % (host, port, data))
 
@@ -548,7 +552,7 @@ class WeeChatBot:
         server = 'undef'
         if not re.match('^[#&]', channel):
             server = channel
-            re_sult = re.match('^(\S+)\s', message)
+            re_sult = re.match(r'^(\S+)\s', message)
             if not re_sult:
                 dlog("UDP message from [%s]:%s failed to properly parse: '%s'" % (host, port, str_data))
                 return self.weechat.WEECHAT_RC_ERROR
@@ -557,7 +561,7 @@ class WeeChatBot:
                 dlog("This '%s' does not look like a channel name" % channel)
                 dlog("UDP message from [%s]:%s failed to properly parse: '%s'" % (host, port, str_data))
                 return self.weechat.WEECHAT_RC_ERROR
-            message = re.sub('^(\S+)\s', '', message)
+            message = re.sub(r'^(\S+)\s', '', message)
 
         if self.state['debug_udp']:
             dlog("UDP message from [%s]:%s to '%s.%s': '%s'" % (host, port, server, channel, message))
@@ -690,12 +694,12 @@ class WeeChatBot:
     ''' Database related functions '''
     def db_connect(self):
         try:
-            pg_conn = psycopg2.connect(user = self.state['db_user'],
+            pg_conn = psycopg2cffi.connect(user = self.state['db_user'],
                         password = self.state['db_pass'],
                         host = self.state['db_host'],
                         port = self.state['db_port'],
                         dbname = self.state['db_name'])
-        except (Exception, psycopg2.Error) as err:
+        except (Exception, psycopg2cffi.Error) as err:
             return dlog("Error while connecting to PostgreSQL: %s" % err)
         return pg_conn
 
@@ -723,7 +727,7 @@ class WeeChatBot:
         host = host.lower()
 
         db = self.db_connect()
-        cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
         sql = "SELECT h.hostmask AS current_hostmask, u.* FROM wcb_hostmasks h, wcb_users u WHERE h.users_id = u.id AND h.hostmask = %s"
         cur.execute(sql, (host,))
@@ -769,7 +773,7 @@ class WeeChatBot:
         username = username.lower()
 
         db = self.db_connect()
-        cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
         sql = "SELECT h.hostmask AS current_hostmask, u.* FROM wcb_hostmasks h, wcb_users u WHERE h.users_id = u.id AND u.username = %s"
         cur.execute(sql, (username,))

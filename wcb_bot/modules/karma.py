@@ -1,4 +1,4 @@
-import psycopg2.extras
+import psycopg2cffi.extras
 
 
 def config(wcb):
@@ -26,7 +26,7 @@ def run(wcb, event):
 
     # Lay-zee way to prevent karma from gobbling up infoitem foo
     # This means you can't "!bla = bla++" things, but hey...
-    re = wcb.state['bot_trigger_re'] + '.+?\s=\s'
+    re = wcb.state['bot_trigger_re'] + r'.+?\s=\s'
     if wcb.re.match(re, event['text']):
         return wcb.signal_cont
 
@@ -35,10 +35,10 @@ def run(wcb, event):
 
     # We gonna need some DB yo.
     db = wcb.db_connect()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
     # Check for a karma up / down event (eg, !foo++)
-    res = wcb.re.match("^\s*(.+?)\s*(\+\+|\-\-)(?:\s*#\s*(.*))?", event_text)
+    res = wcb.re.match(r"^\s*(.+?)\s*(\+\+|\-\-)(?:\s*#\s*(.*))?", event_text)
     if res:
         item = res.group(1).lower()
         direction = res.group(2)
@@ -111,7 +111,7 @@ def run(wcb, event):
             return wcb.reply("karma for '%s' is neutral" % item)
 
 
-    res = wcb.re.match("^(?:karma-why|why-karma|why)\-?(up|down)", event['command'])
+    res = wcb.re.match(r"^(?:karma-why|why-karma|why)\-?(up|down)", event['command'])
     if res:
         direction = res.group(1)
         item = event['command_args'].lower()
@@ -143,7 +143,7 @@ def run(wcb, event):
         else:
             return wcb.reply("no reasons were given for karma %s" % direction)
     
-    res = wcb.re.match("^(?:karma-who|who-karma|who)\-?(up|down)", event['command'])
+    res = wcb.re.match(r"^(?:karma-who|who-karma|who)\-?(up|down)", event['command'])
     if res:
         direction = res.group(1)
         item = event['command_args'].lower()
@@ -179,7 +179,7 @@ def run(wcb, event):
         return wcb.reply("the following person(s) brought the karma %s: %s" % (direction, rtxt))
 
 
-    res = wcb.re.match("^(good|bad)ness", event['command'])
+    res = wcb.re.match(r"^(good|bad)ness", event['command'])
     if res:
         direction = res.group(1)
         sql_direction = "ASC"
@@ -204,7 +204,7 @@ def run(wcb, event):
         return wcb.say(rtxt)
 
 
-    res = wcb.re.match("^(lovers|fans|haters)", event['command'])
+    res = wcb.re.match(r"^(lovers|fans|haters)", event['command'])
     if res:
         direction = res.group(1)
         item = event['command_args'].lower()
@@ -241,7 +241,7 @@ def run(wcb, event):
         return wcb.reply(rtxt)
 
 
-    res = wcb.re.match("^set\-?karma\s+(.+?)\s+([-0-9]+)", event_text)
+    res = wcb.re.match(r"^set\-?karma\s+(.+?)\s+([-0-9]+)", event_text)
     if res:
         if not wcb.perms(["owner", "set-karma"]): return wcb.reply("i can't let you do that.")
         item = res.group(1).lower()
@@ -253,7 +253,7 @@ def run(wcb, event):
         return wcb.reply("ok.")
 
 
-    res = wcb.re.match("^(?:karma-del|del-karma)\s+(.*)", event['command'])
+    res = wcb.re.match(r"^(?:karma-del|del-karma)\s+(.*)", event['command'])
     if res:
         if not wcb.perms(["owner", "set-karma"]): return wcb.reply("i can't let you do that.")
         item = res.group(1).lower()
@@ -268,7 +268,7 @@ def run(wcb, event):
         return wcb.reply("ok.")
 
 
-    res = wcb.re.match("^karma-search", event['command'])
+    res = wcb.re.match(r"^karma-search", event['command'])
     if res:
         item = event['command_args'].lower()
         if item == '': return wcb.reply('please specify a term to search for.')

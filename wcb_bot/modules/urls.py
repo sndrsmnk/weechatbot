@@ -29,7 +29,7 @@ def run(wcb, event):
     manual_urls_trigger = False
 
     # See if url can be matched.
-    res = wcb.re.search("(?i)(https?\:\/\/[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
+    res = wcb.re.search(r"(?i)(https?\:\/\/[a-z0-9\-\_]+\.[a-z0-9\-\.\_]+(?:\/[^\s]+)*[^\s])", event['text'])
     if res:
         url = res.group(1)
         if '..' in url:
@@ -91,7 +91,7 @@ def __pycurl_headerfn(header_line):
 
 
 def fetchURLinfo(wcb, url):
-    if not wcb.re.match("^https?://", url):
+    if not wcb.re.match(r"^https?://", url):
         url = 'https://' + url
 
     req_headers = [
@@ -117,7 +117,7 @@ def fetchURLinfo(wcb, url):
     encoding = None
     if 'content-type' in headers:
         content_type = headers['content-type'].lower()
-        res = wcb.re.search('charset=(\S+)', content_type)
+        res = wcb.re.search(r'charset=(\S+)', content_type)
         if res:
             encoding = res.group(1)
     if encoding is None:
@@ -126,7 +126,7 @@ def fetchURLinfo(wcb, url):
         return {'title': 'binary data', 'encoding': encoding, 'content-type': content_type}
 
     if content_type:
-        content_type = wcb.re.sub(';.*', '', content_type)
+        content_type = wcb.re.sub(r';.*', '', content_type)
     else:
         content_type = 'undef'
 
@@ -146,10 +146,10 @@ def fetchURLinfo(wcb, url):
         return {'title': '', 'encoding': '', 'content-type': ''}
 
     title = '[title tag not found]'
-    res = wcb.re.search('(?ims)<title[^>]*>(.+?)<\/title', body)
+    res = wcb.re.search(r'(?ims)<title[^>]*>(.+?)<\/title', body)
     if res:
         title = html.unescape(res.group(1))
-        title = wcb.re.sub('^\\s+', ' ', title, flags=wcb.re.MULTILINE).strip()
-        title = wcb.re.sub('[\r\n]', '', title, flags=wcb.re.MULTILINE).strip()
+        title = wcb.re.sub(r'^\\s+', ' ', title, flags=wcb.re.MULTILINE).strip()
+        title = wcb.re.sub(r'[\r\n]', '', title, flags=wcb.re.MULTILINE).strip()
 
     return {'title': title, 'encoding': encoding, 'content-type': content_type}

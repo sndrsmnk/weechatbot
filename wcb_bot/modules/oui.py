@@ -108,7 +108,7 @@ def actualOUILookup(wcb, mac_input):
 def OUILookup(wcb, mac_input):
     mac_input = mac_input.upper()
     mac_input = mac_input.replace('-', ':')
-    mac_input = re.sub('[^A-F0-9:]', '', mac_input)
+    mac_input = re.sub(r'[^A-F0-9:]', '', mac_input)
 
     octets = mac_input.split(':')
 

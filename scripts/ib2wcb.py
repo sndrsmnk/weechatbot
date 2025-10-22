@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-import psycopg2
+import psycopg2cffi
 import pymysql.cursors
 
 dbi_h = 'irssibot.db.source.host.tld'
@@ -16,7 +16,7 @@ dbo_d = 'weechatbotdb'
 dbi = pymysql.connect(host=dbi_h, user=dbi_u, password=dbi_p, db=dbi_d, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 dbi_cur = dbi.cursor()
 
-dbo = psycopg2.connect(host=dbo_h, user=dbo_u, password=dbo_p, dbname=dbo_d)
+dbo = psycopg2cffi.connect(host=dbo_h, user=dbo_u, password=dbo_p, dbname=dbo_d)
 dbo_cur = dbo.cursor()
 
 defchannel = '#bit.nl'

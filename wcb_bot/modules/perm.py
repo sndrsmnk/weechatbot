@@ -9,7 +9,7 @@ def config(wcb):
 
 def run(wcb, event):
     args_txt = event['command_args']
-    args_txt = wcb.re.sub('\s{2,}', ' ', args_txt)
+    args_txt = wcb.re.sub(r'\s{2,}', ' ', args_txt)
     args_arr = args_txt.split(' ')
 
     if len(args_arr) < 3:
@@ -18,7 +18,7 @@ def run(wcb, event):
     mode = args_arr.pop(0)
     nick = args_arr.pop(0)
     channel = ''
-    if wcb.re.match('^[#&]', args_arr[-1]):
+    if wcb.re.match(r'^[#&]', args_arr[-1]):
         channel = args_arr.pop(-1)
 
     # args_arr should now only hold permissions to set
@@ -30,7 +30,7 @@ def run(wcb, event):
     db = wcb.db_connect()
     cur = db.cursor()
 
-    if wcb.re.match('(?:set|add)', mode):
+    if wcb.re.match(r'(?:set|add)', mode):
         counter = 0
         sql = "INSERT INTO wcb_perms (users_id, permission, channel) VALUES (%s, %s, %s)"
         for permission in args_arr:
@@ -39,7 +39,7 @@ def run(wcb, event):
         db.commit(); cur.close(); db.close()
         return wcb.say("Added %d permissions to '%s'" % (counter, nick))
 
-    elif wcb.re.match('(?:rem(?:ove)?|del(?:ete)?)', mode):
+    elif wcb.re.match(r'(?:rem(?:ove)?|del(?:ete)?)', mode):
         counter = 0
         sql = "DELETE FROM wcb_perms WHERE users_id = %s AND permission = %s AND channel = %s"
         for permission in args_arr:

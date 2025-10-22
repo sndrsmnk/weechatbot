@@ -29,7 +29,7 @@ def run(wcb, event):
         return wcb.signal_cont
 
 
-    if wcb.re.match("^(?:pt|previous-topic)$", event['command']):
+    if wcb.re.match(r"^(?:pt|previous-topic)$", event['command']):
         if event['channel'] not in wcb.state['previous_topic']:
             return wcb.say("No topic information on '%s' was saved yet." % event['channel'])
         return wcb.say("Previous topic on '%s' was '%s'" % (event['channel'], wcb.state['previous_topic'][event['channel']]))

@@ -84,7 +84,7 @@ def run(wcb, event):
 
     tag = event['server'] + '.' + event['channel']
     bot_plus_r_nickmask = event['bot_nick'] + '*!*' + event['bot_hostmask']
-    bot_plus_r_nickmask = re.sub('!.*@', '!*@', bot_plus_r_nickmask)
+    bot_plus_r_nickmask = re.sub(r'!.*@', '!*@', bot_plus_r_nickmask)
 
     if event['signal'] == 'irc_in2_344':
         reoplist_item_event(wcb, event, tag, bot_plus_r_nickmask)

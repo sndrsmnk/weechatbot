@@ -1,4 +1,4 @@
-import psycopg2.extras
+import psycopg2cffi.extras
 import random
 
 
@@ -21,7 +21,7 @@ def config(wcb):
 def run(wcb, event):
 
     db = wcb.db_connect()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
     if event['command'] == 'aq':
         quote = event['command_args']
@@ -90,7 +90,7 @@ def run(wcb, event):
         return
 
 
-    res = wcb.re.match('^(?:q|quote|rq|rq3|r3q)$', event['command'])
+    res = wcb.re.match(r'^(?:q|quote|rq|rq3|r3q)$', event['command'])
     if res:
         count = 1
         if '3' in event['command']:
@@ -120,7 +120,7 @@ def run(wcb, event):
         return
     
 
-    res = wcb.re.match('^(?:lq|l3q|lq3)$', event['command'])
+    res = wcb.re.match(r'^(?:lq|l3q|lq3)$', event['command'])
     if res:
         count = 1
         if '3' in event['command']:
@@ -145,7 +145,7 @@ def run(wcb, event):
         return
 
 
-    res = wcb.re.match('^quote-(?:who|when)$', event['command'])
+    res = wcb.re.match(r'^quote-(?:who|when)$', event['command'])
     if res:
         quote_id = event['command_args']
         if not quote_id.isnumeric():

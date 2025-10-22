@@ -38,7 +38,7 @@ def do_forget(wcb, event):
         wcb.reply("you can't do that. Sorry.")
         return wcb.signal_stop
         
-    re = wcb.re.compile('([^\s]+)\s(.*)')
+    re = wcb.re.compile(r'([^\s]+)\s(.*)')
     res = re.match(event['command_args'])
     if not res:
         wcb.reply("command unclear. Try '!forget <key> <[partof]value>'. Will remove all matching entries.")
@@ -62,7 +62,7 @@ def do_forget(wcb, event):
 
 
 def do_define(wcb, event):
-    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(?:define\s)?(.+?) = (.*)')
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + r'(?:define\s)?(.+?) = (.*)')
     res = re.match(event['text'])
     pub_k = res.group(1)
     db_k = res.group(1).lower().strip()
@@ -91,13 +91,13 @@ def run(wcb, event):
     txt = event['text']
 
     # See if it is an attempt to define a thing?
-    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(?:define\s)?(.+?) = (.*)')
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + r'(?:define\s)?(.+?) = (.*)')
     res = re.match(txt)
     if res:
         return do_define(wcb, event)
 
     # See if it is an attempt to get the definition of a thing?
-    re = wcb.re.compile(wcb.state['bot_trigger_re'] + '(.+?)\?\s*$')
+    re = wcb.re.compile(wcb.state['bot_trigger_re'] + r'(.+?)\?\s*$')
     res = re.match(txt)
     if res:
         pub_k = res.group(1)

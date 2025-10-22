@@ -144,7 +144,7 @@ def alarm_timer_event(wcb, event):
             new_alarms.append(alarm_dict)
             continue
 
-        res = re.match('^([^\.]+)\.(.*)', alarm_dict['alarm_where'])
+        res = re.match(r'^([^\.]+)\.(.*)', alarm_dict['alarm_where'])
         if not res:
             wcb.mlog("Alarm: where '%s' did not match regexp." % alarm_dict['alarm_where'])
             continue
