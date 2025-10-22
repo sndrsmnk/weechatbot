@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-import psycopg2
+import psycopg2cffi
 import pymysql.cursors
 import sqlite3
 
@@ -15,7 +15,7 @@ dbi = sqlite3.connect(dbi_f)
 dbi.row_factory = sqlite3.Row
 dbi_cur = dbi.cursor()
 
-dbo = psycopg2.connect(host=dbo_h, user=dbo_u, password=dbo_p, dbname=dbo_d)
+dbo = psycopg2cffi.connect(host=dbo_h, user=dbo_u, password=dbo_p, dbname=dbo_d)
 dbo_cur = dbo.cursor()
 
 defchannel = '#bit.nl'

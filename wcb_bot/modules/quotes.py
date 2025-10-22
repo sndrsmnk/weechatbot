@@ -21,7 +21,7 @@ def config(wcb):
 def run(wcb, event):
 
     db = wcb.db_connect()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
     if event['command'] == 'aq':
         quote = event['command_args']

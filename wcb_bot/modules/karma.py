@@ -35,7 +35,7 @@ def run(wcb, event):
 
     # We gonna need some DB yo.
     db = wcb.db_connect()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
     # Check for a karma up / down event (eg, !foo++)
     res = wcb.re.match(r"^\s*(.+?)\s*(\+\+|\-\-)(?:\s*#\s*(.*))?", event_text)

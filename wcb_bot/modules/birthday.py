@@ -26,7 +26,7 @@ def bd_set(wcb, event):
     dob = "%d-%d-%d" % (int(yy), int(mm), int(dd))
 
     db = wcb.db_connect()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
     sql = "UPDATE wcb_users SET dob = %s WHERE id = %s"
     cur.execute(sql, (dob, event['user_info']['id']))
     db.commit()
@@ -71,7 +71,7 @@ def show_age(wcb, event):
                 EXTRACT(DAY FROM AGE(dob)) AS day
             FROM wcb_users WHERE id = %s"""
     db = wcb.db_connect()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
     cur.execute(sql, (lookup_uid,))
     res = cur.fetchone()
     if not res:
@@ -91,7 +91,7 @@ def show_birthdays(wcb, event):
     dtt = dt.timetuple()
     nowmonth, nowday = (dtt[1], dtt[2])
     db = wcb.db_connect()
-    cur = db.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = db.cursor(cursor_factory = psycopg2cffi.extras.DictCursor)
 
     # BDs today!
     sql = """SELECT username, dob
